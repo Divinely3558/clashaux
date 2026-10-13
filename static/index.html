@@ -25,6 +25,7 @@
     <a href="#cardService"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="8" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/><line x1="7" y1="8" x2="7" y2="8"/><line x1="7" y1="17" x2="7" y2="17"/></svg>服务</a>
     <a href="#secLogs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>日志</a>
     <a href="#secUpdate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>更新内核</a>
+    <a href="#secBasic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>基础设置</a>
     <a href="#secBase"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>头部模板</a>
     <a href="#secConfig"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>配置更新</a>
     <a href="#secSub"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a9 9 0 019 9M4 4a16 16 0 0116 16"/><circle cx="5" cy="19" r="1"/></svg>订阅</a>
@@ -46,6 +47,7 @@
           <button class="btn" data-act="start">启动服务</button>
           <button class="btn primary" data-act="reload">重载配置</button>
           <button class="btn" id="btnRefresh">刷新状态</button>
+          <button class="btn" id="btnPanel" style="margin-left:auto">打开面板</button>
         </div>
       </div>
     </section>
@@ -67,7 +69,7 @@
 
   <section class="card wide" id="secUpdate">
     <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>mihomo 更新</h2>
-    <p class="hint">检测 GitHub 最新版本并一键升级（deb 安装路径，自动匹配 CPU 的 GOAMD64 档位）。升级前自动备份旧版二进制，失败可回滚。</p>
+    <p class="hint">检测 GitHub 最新版本并一键升级（安装到程序目录，可自选 GOAMD64 档位）。升级前自动备份旧版二进制到 backups/ 目录作兜底，升级失败不可回滚。GitHub 无法访问时，可手动下载 .gz 或 .deb 后上传安装。</p>
     <div class="kv" style="grid-template-columns:auto 1fr auto 1fr auto 1fr">
       <dt>当前版本</dt><dd id="uCur"><span class="sk"></span></dd>
       <dt>最新版本</dt><dd id="uLatest"><span class="sk"></span></dd>
@@ -79,9 +81,53 @@
       <label class="switch"><input type="checkbox" id="upProxy">走本机代理</label>
       <span class="file-name" id="upStatus"></span>
     </div>
+    <div class="file-row" style="margin-top:10px">
+      <span style="font-size:13px;color:var(--muted)">GOAMD64 档位：</span>
+      <select id="upLevel" style="max-width:100%">
+        <option value="">自动（按系统检测推荐）</option>
+        <option value="v3">v3 · 2013 年后的普通 PC / 笔记本（Intel 4 代后、AMD 锐龙）</option>
+        <option value="v2">v2 · 2008~2013 年老电脑、老服务器</option>
+        <option value="v1">v1 · 很老的 CPU（J1900、G1840、初代至强等），最稳</option>
+      </select>
+      <span class="file-name" id="upLevelHint"></span>
+    </div>
+    <p class="hint" style="margin-top:6px">v3 需 AVX2 指令集，v2 需 SSE4.2 / POPCNT，v1 任意 x86-64 CPU。选错档位导致无法运行时，换选正确档位再点「一键更新」，会自动用新档位重装替换。</p>
     <div class="verdict" id="upVerdict">
       <span class="badge" id="upBadge">–</span>
       <pre class="out" id="upOut" style="display:none"></pre>
+    </div>
+    <div class="file-row" style="margin-top:14px;border-top:1px solid var(--line);padding-top:14px">
+      <span style="font-size:13px;color:var(--muted)">安装包手动安装：</span>
+      <label class="btn">选择 .gz / .deb 包<input type="file" id="upDebFile" accept=".gz,.deb" hidden></label>
+      <span class="file-name" id="upDebName">未选择文件</span>
+      <button class="btn" id="btnUpUpload" disabled>上传安装</button>
+    </div>
+    <div class="file-row" style="margin-top:14px;border-top:1px solid var(--line);padding-top:14px">
+      <span style="font-size:13px;color:var(--muted)">卸载 mihomo：</span>
+      <span class="file-name">删除二进制、systemd 服务与运行文件；保留 backups/ 备份、metacubexd/ 与面板数据</span>
+      <button class="btn danger" id="btnUninstall">卸载…</button>
+    </div>
+    <div class="file-row" style="margin-top:14px;border-top:1px solid var(--line);padding-top:14px">
+      <span style="font-size:13px;color:var(--muted)">metacubexd 面板：</span>
+      <span class="file-name">已内置，首次启动自动释放到程序同目录 metacubexd/</span>
+      <button class="btn" id="btnDashInstall">重新释放面板</button>
+      <span class="file-name" id="dashStatus"></span>
+    </div>
+  </section>
+
+  <section class="card wide" id="secBasic">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>基础设置</h2>
+    <p class="hint">external-controller、external-ui、secret、mixed-port 在此处修改；保存后写入配置文件最头部并自动重载 mihomo，base.yaml 中不再显示这些配置。secret 留空表示控制器不加密。</p>
+    <div class="kv" style="grid-template-columns:auto 1fr auto 1fr;align-items:center">
+      <dt>external-controller</dt><dd><input type="text" class="input" id="bcCtrl" style="width:100%" placeholder="0.0.0.0:9090"></dd>
+      <dt>mixed-port</dt><dd><input type="number" class="input" id="bcPort" style="width:100%" placeholder="7890" min="1" max="65535"></dd>
+      <dt>external-ui</dt><dd><input type="text" class="input" id="bcUi" style="width:100%" placeholder="留空默认（程序目录/metacubexd）"></dd>
+      <dt>secret</dt><dd><div style="display:flex;gap:8px"><input type="text" class="input" id="bcSecret" style="width:100%" placeholder="留空则不加密"><button class="btn" id="btnGenSecret">生成</button></div></dd>
+    </div>
+    <div class="file-row" style="margin-top:4px">
+      <button class="btn primary" id="btnBasicSave">保存并应用</button>
+      <button class="btn" id="btnBasicReload">还原</button>
+      <span class="file-name" id="basicStatus"></span>
     </div>
   </section>
 
@@ -102,6 +148,7 @@
     <div class="file-row">
       <label class="btn">选择 config.yaml<input type="file" id="cfgFile" accept=".yaml,.yml" hidden></label>
       <span class="file-name" id="cfgName">未选择文件</span>
+      <button class="btn" id="btnLoadCurrent" style="margin-left:auto">读取当前配置</button>
     </div>
     <textarea id="cfgPaste" class="input" style="width:100%;min-height:220px;margin-top:12px" placeholder="或直接粘贴 config.yaml 内容到此…" spellcheck="false"></textarea>
     <div class="file-row" style="margin-top:12px">
@@ -144,10 +191,69 @@
 </main>
 <div id="toasts"></div>
 
+<!-- 登录弹窗 -->
+<div id="loginModal" class="modal" style="display:none">
+  <div class="modal-content">
+    <h3>访问认证</h3>
+    <p>请输入访问令牌（token）</p>
+    <input type="password" id="tokenInput" class="input" style="width:100%;margin:12px 0" placeholder="Token">
+    <div class="modal-actions">
+      <button class="btn primary" id="btnLogin">确认</button>
+    </div>
+    <div id="loginError" style="color:#fb7185;font-size:13px;margin-top:12px;display:none"></div>
+    <p style="font-size:12px;color:var(--muted);margin-top:16px">
+      Token 位于 <code style="background:rgba(13,21,38,.6);padding:2px 6px;border-radius:4px">clashaux.json</code> 文件中
+    </p>
+  </div>
+</div>
+
+<!-- 一键安装 mihomo 弹窗 -->
+<div id="installModal" class="modal" style="display:none">
+  <div class="modal-content">
+    <h3>检测到 mihomo 未安装</h3>
+    <p>点击下方按钮将自动完成：</p>
+    <ul>
+      <li>下载最新版 mihomo（自动匹配 CPU 档位）</li>
+      <li>安装到程序目录（与面板同一文件夹）</li>
+      <li>创建 systemd 服务并设为开机自启</li>
+      <li>生成初始配置文件（含 external-controller 和 external-ui）</li>
+      <li>释放内置 metacubexd 面板到程序目录</li>
+    </ul>
+    <div class="modal-actions">
+      <button class="btn primary" id="btnInstall">一键安装</button>
+      <button class="btn" id="btnInstallSkip">稍后再说</button>
+    </div>
+    <div id="installSteps" class="install-steps"></div>
+  </div>
+</div>
+
+<!-- 卸载 mihomo 弹窗 -->
+<div id="uninstallModal" class="modal" style="display:none">
+  <div class="modal-content">
+    <h3>卸载 mihomo</h3>
+    <p>此操作将删除：</p>
+    <ul>
+      <li>mihomo 二进制（程序目录内）</li>
+      <li>systemd 服务单元（mihomo.service）</li>
+      <li>运行文件：config.yaml、cache.db、ruleset/</li>
+    </ul>
+    <p>保留：backups/ 配置备份、metacubexd/ 面板、面板自身数据（可随时一键安装重装）。</p>
+    <input type="password" id="uninstallToken" class="input" style="width:100%;margin:12px 0" placeholder="输入面板 Token 确认卸载">
+    <div class="modal-actions">
+      <button class="btn danger" id="btnUninstallConfirm">确认卸载</button>
+      <button class="btn" id="btnUninstallCancel">取消</button>
+    </div>
+    <div id="uninstallMsg" style="font-size:13px;margin-top:12px;display:none"></div>
+  </div>
+</div>
+
 <script>
 const $ = id => document.getElementById(id);
 const fmtSize = n => n > 1048576 ? (n / 1048576).toFixed(1) + " MB" : (n / 1024).toFixed(1) + " KB";
 const fmtTime = ts => new Date(ts * 1000).toLocaleString("zh-CN", { hour12: false });
+function esc(s) { const d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+
+let authToken = localStorage.getItem("clashaux_token") || "";
 
 function toast(msg, ok = true) {
   const el = document.createElement("div");
@@ -157,11 +263,111 @@ function toast(msg, ok = true) {
   setTimeout(() => el.remove(), 5000);
 }
 
-async function api(url, opts) {
+async function api(url, opts = {}) {
+  opts.headers = opts.headers || {};
+  if (authToken) {
+    opts.headers["Authorization"] = "Bearer " + authToken;
+  }
   const r = await fetch(url, opts);
+  if (r.status === 401) {
+    authToken = "";
+    localStorage.removeItem("clashaux_token");
+    showLoginModal();
+    throw new Error("未授权");
+  }
   if (!r.ok) throw new Error("HTTP " + r.status);
   return r.json();
 }
+
+/* ---------- 登录 ---------- */
+const loginModal = $("loginModal"), tokenInput = $("tokenInput"), loginError = $("loginError");
+
+function showLoginModal() {
+  loginModal.style.display = "flex";
+  tokenInput.value = "";
+  loginError.style.display = "none";
+  setTimeout(() => tokenInput.focus(), 100);
+}
+function hideLoginModal() {
+  loginModal.style.display = "none";
+}
+
+$("btnLogin").onclick = async () => {
+  const token = tokenInput.value.trim();
+  if (!token) { loginError.textContent = "请输入 token"; loginError.style.display = "block"; return; }
+  try {
+    const d = await api("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: token }),
+    });
+    if (d.ok) {
+      authToken = d.token;
+      localStorage.setItem("clashaux_token", authToken);
+      hideLoginModal();
+      toast("认证成功");
+      refreshStatus();
+    } else {
+      loginError.textContent = d.error || "token 错误";
+      loginError.style.display = "block";
+    }
+  } catch (e) {
+    loginError.textContent = e.message;
+    loginError.style.display = "block";
+  }
+};
+tokenInput.onkeydown = e => { if (e.key === "Enter") $("btnLogin").click(); };
+loginModal.onclick = e => { if (e.target === loginModal) hideLoginModal(); };
+
+/* ---------- 基础设置 ---------- */
+const bcCtrl = $("bcCtrl"), bcUi = $("bcUi"), bcSecret = $("bcSecret"), bcPort = $("bcPort");
+let basicOriginal = null;
+
+async function loadBasic() {
+  try {
+    const d = await api("/api/basic");
+    basicOriginal = d;
+    bcCtrl.value = d["external-controller"] || "";
+    bcUi.value = d["external-ui"] || "";
+    bcSecret.value = d["secret"] || "";
+    bcPort.value = d["mixed-port"] ?? "";
+  } catch (e) { /* 静默 */ }
+}
+
+$("btnGenSecret").onclick = () => {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+  const arr = crypto.getRandomValues(new Uint32Array(10));
+  bcSecret.value = Array.from(arr, n => chars[n % chars.length]).join("");
+};
+$("btnBasicReload").onclick = () => { if (basicOriginal) loadBasic(); };
+$("btnBasicSave").onclick = async () => {
+  const btn = $("btnBasicSave");
+  if (!bcCtrl.value.trim()) { toast("external-controller 不能为空", false); return; }
+  if (!bcUi.value.trim()) { toast("external-ui 不能为空", false); return; }
+  const body = {
+    external_controller: bcCtrl.value.trim(),
+    external_ui: bcUi.value.trim(),
+    secret: bcSecret.value.trim(),
+    mixed_port: parseInt(bcPort.value, 10) || 0,
+  };
+  btn.disabled = true;
+  $("basicStatus").textContent = "";
+  try {
+    const d = await api("/api/basic", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    $("basicStatus").textContent = d.ok
+      ? "✅ " + (d.message || "已保存") + (d.backup ? "（备份 " + d.backup + "）" : "")
+      : "❌ " + (d.error || (d.output ? d.error + "\n" + d.output : "失败"));
+    $("basicStatus").style.color = d.ok ? "var(--ok, #34d399)" : "#fb7185";
+    $("basicStatus").style.whiteSpace = "pre-wrap";
+    toast(d.message || d.error, d.ok);
+    if (d.ok) { refreshStatus(); loadBasic(); }
+  } catch (e) { toast(e.message, false); }
+  btn.disabled = false;
+};
 
 /* ---------- 服务状态 ---------- */
 async function refreshStatus() {
@@ -193,10 +399,15 @@ document.querySelectorAll("[data-act]").forEach(b => {
     b.disabled = false;
   };
 });
-$("btnRefresh").onclick = async () => {
-  refreshStatus();
-  try {
-  } catch (e) { toast(e.message, false); }
+$("btnRefresh").onclick = () => { refreshStatus(); };
+$("btnPanel").onclick = () => {
+  // 端口取自基础设置的 external-controller（0.0.0.0 等监听地址换成本机访问域名）
+  let port = "9090";
+  if (basicOriginal && basicOriginal["external-controller"]) {
+    const p = String(basicOriginal["external-controller"]).split(":").pop();
+    if (/^\d+$/.test(p)) port = p;
+  }
+  window.open("http://" + window.location.hostname + ":" + port + "/ui/", "_blank");
 };
 
 /* ---------- 日志 ---------- */
@@ -222,7 +433,7 @@ $("btnLogs").onclick = async () => {
 $("logLive").onchange = e => {
   if (e.target.checked) {
     if (logBox.textContent === "暂无日志") $("btnLogs").click();
-    es = new EventSource("/api/logs/stream");
+    es = new EventSource("/api/logs/stream?token=" + encodeURIComponent(authToken));
     es.onmessage = ev => appendLog(ev.data);
     es.onerror = () => { es.close(); es = null; e.target.checked = false; };
     toast("已开启实时跟踪");
@@ -233,7 +444,28 @@ $("logLive").onchange = e => {
 };
 
 /* ---------- 配置更新 ---------- */
-const cfgFile = $("cfgFile"), cfgPaste = $("cfgPaste"), btnPreview = $("btnPreview"), btnApply = $("btnApply"), btnClear = $("btnClear");
+const cfgFile = $("cfgFile"), cfgPaste = $("cfgPaste"), btnPreview = $("btnPreview"), btnApply = $("btnApply"), btnClear = $("btnClear"), btnLoadCurrent = $("btnLoadCurrent");
+
+btnLoadCurrent.onclick = async () => {
+  if (cfgPaste.value.trim() && !confirm("当前文本框已有内容，读取当前配置将覆盖，确定继续？")) return;
+  btnLoadCurrent.disabled = true;
+  btnLoadCurrent.textContent = "读取中…";
+  try {
+    const d = await api("/api/config/current");
+    if (d.ok) {
+      cfgPaste.value = d.text;
+      cfgFile.value = "";
+      $("cfgName").textContent = "（当前运行配置）";
+      btnPreview.disabled = false;
+      cfgResetVerdict();
+      toast("已加载当前运行配置");
+    } else {
+      toast(d.error || "读取失败", false);
+    }
+  } catch (e) { toast(e.message, false); }
+  btnLoadCurrent.disabled = false;
+  btnLoadCurrent.textContent = "读取当前配置";
+};
 
 function cfgHasContent() {
   return !!cfgFile.files[0] || !!cfgPaste.value.trim();
@@ -336,7 +568,7 @@ async function refreshBackups() {
     d.items.forEach(it => {
       const row = document.createElement("div");
       row.className = "backup";
-      row.innerHTML = `<span class="name">${it.name}</span>` +
+      row.innerHTML = `<span class="name">${esc(it.name)}</span>` +
         `<span class="meta">${fmtSize(it.size)} · ${fmtTime(it.mtime)}</span>`;
       const btn = document.createElement("button");
       btn.className = "btn danger";
@@ -359,6 +591,15 @@ async function rollback(name) {
 
 /* ---------- 订阅 ---------- */
 const subUrl = $("subUrl"), btnSubPreview = $("btnSubPreview"), btnSubApply = $("btnSubApply");
+
+// 互斥锁：任一订阅写入期间，所有「一键更新/一键应用」按钮禁用，防止同时更新多个
+let subBusy = false;
+const subUpdBtns = [];
+function setSubBusy(v) {
+  subBusy = v;
+  subUpdBtns.forEach(b => { b.disabled = v; });
+  btnSubApply.disabled = v || !subUrl.value.trim();
+}
 
 function renderVerdict(badgeEl, statsEl, outEl, d) {
   const v = badgeEl.parentElement;
@@ -406,9 +647,9 @@ btnSubPreview.onclick = async () => {
   btnSubPreview.textContent = "拉取预览";
 };
 btnSubApply.onclick = async () => {
-  if (!subUrl.value.trim()) return;
+  if (!subUrl.value.trim() || subBusy) return;
   if (!confirm("确认拉取订阅并写入生效配置？当前配置会自动备份。")) return;
-  btnSubApply.disabled = true;
+  setSubBusy(true);
   btnSubPreview.disabled = true;
   btnSubApply.textContent = "应用中…";
   try {
@@ -430,7 +671,7 @@ btnSubApply.onclick = async () => {
     refreshStatus();
     refreshBackups();
   } catch (e) { toast(e.message, false); }
-  btnSubApply.disabled = false;
+  setSubBusy(false);
   btnSubPreview.disabled = false;
   btnSubApply.textContent = "一键应用";
 };
@@ -451,19 +692,23 @@ async function refreshSubs() {
   try {
     const d = await api("/api/subs");
     const box = $("subList");
+    subUpdBtns.length = 0;
     if (!d.items.length) { box.innerHTML = '<div class="empty">暂无已保存订阅</div>'; return; }
     box.innerHTML = "";
     d.items.forEach(it => {
       const row = document.createElement("div");
       row.className = "backup sub-row";
-      row.innerHTML = `<span class="name">${it.name}${it.proxy ? " · 走代理" : ""}</span><span class="url" title="${it.url}">${it.url}</span><span class="file-name sub-status"></span>`;
+      row.innerHTML = `<span class="name">${esc(it.name)}${it.proxy ? " · 走代理" : ""}</span><span class="url" title="${esc(it.url)}">${esc(it.url)}</span><span class="file-name sub-status"></span>`;
       const status = row.querySelector(".sub-status");
       const btnUpd = document.createElement("button");
       btnUpd.className = "btn primary";
       btnUpd.textContent = "一键更新";
+      btnUpd.disabled = subBusy;
+      subUpdBtns.push(btnUpd);
       btnUpd.onclick = async () => {
+        if (subBusy) return;
         if (!confirm(`确认拉取「${it.name}」并写入生效？`)) return;
-        btnUpd.disabled = true;
+        setSubBusy(true);
         btnUpd.textContent = "更新中…";
         status.textContent = "";
         try {
@@ -483,7 +728,7 @@ async function refreshSubs() {
           status.style.color = "#fb7185";
           toast(e.message, false);
         }
-        btnUpd.disabled = false;
+        setSubBusy(false);
         btnUpd.textContent = "一键更新";
       };
       const btnRen = document.createElement("button");
@@ -527,7 +772,7 @@ async function refreshSubs() {
 
 /* ---------- mihomo 更新 ---------- */
 const btnUpCheck = $("btnUpCheck"), btnUpApply = $("btnUpApply"), upStatus = $("upStatus");
-let upHasUpdate = false;
+let upHasUpdate = false, upDetected = "";
 
 function upVerdictShow(ok, text) {
   const v = $("upVerdict");
@@ -544,27 +789,51 @@ function upVerdictFail(text) {
   $("upOut").style.display = "block";
   $("upOut").textContent = text;
 }
+
+// 「一键更新」可用条件：有新版本，或显式选择了与系统推荐不同的档位（换档重装）
+function upRefreshApplyBtn() {
+  const lv = $("upLevel").value;
+  const levelDiff = !!lv && lv !== upDetected;
+  btnUpApply.disabled = !(upHasUpdate || levelDiff);
+  btnUpApply.textContent = !upHasUpdate && levelDiff ? "换档重装" : "一键更新";
+}
+function upCheckRender(d) {
+  if (!d.ok) { upVerdictFail(d.error || "检测失败"); return; }
+  $("uCur").textContent = "v" + d.current;
+  $("uLatest").textContent = "v" + d.latest;
+  $("uLevel").textContent = d.detected + (d.has_update ? "" : "（已是最新）");
+  upDetected = d.detected;
+  upHasUpdate = d.has_update;
+  const missing = Object.entries(d.levels || {}).filter(([, n]) => !n).map(([k]) => k);
+  $("upLevelHint").textContent = "系统推荐 " + d.detected + (missing.length ? "（release 缺档位: " + missing.join("/") + "）" : "");
+  upRefreshApplyBtn();
+  upVerdictShow(d.has_update, d.has_update
+    ? `发现新版本 v${d.latest}（推荐下载 ${d.asset_name}）`
+    : `已是最新版本 v${d.current}`);
+}
+$("upLevel").onchange = upRefreshApplyBtn;
+
 btnUpCheck.onclick = async () => {
   btnUpCheck.disabled = true;
   btnUpCheck.textContent = "检测中…";
   upStatus.textContent = "";
   try {
     const d = await api("/api/upgrade/check?proxy=" + $("upProxy").checked);
-    if (!d.ok) { upVerdictFail(d.error || "检测失败"); return; }
-    $("uCur").textContent = "v" + d.current;
-    $("uLatest").textContent = "v" + d.latest;
-    $("uLevel").textContent = d.level;
-    upHasUpdate = d.has_update;
-    btnUpApply.disabled = !d.has_update;
-    upVerdictShow(d.has_update, d.has_update
-      ? `发现新版本 v${d.latest}（将下载 ${d.deb_name}）`
-      : `已是最新版本 v${d.current}`);
+    upCheckRender(d);
   } catch (e) { upVerdictFail(e.message); }
   btnUpCheck.disabled = false;
   btnUpCheck.textContent = "检查更新";
 };
 btnUpApply.onclick = async () => {
-  if (!confirm("确认升级 mihomo？\n将下载 deb 安装并重启 mihomo 服务，升级前自动备份当前版本。")) return;
+  const lv = $("upLevel").value;
+  const levelDiff = !!lv && lv !== upDetected;
+  let tip;
+  if (upHasUpdate) {
+    tip = `确认升级到 v${$("uLatest").textContent}（GOAMD64 ${lv || upDetected}）？\n将下载 gz 安装包安装到程序目录并重启 mihomo 服务，升级前自动备份当前版本，升级失败不可回滚。`;
+  } else {
+    tip = `当前已是最新版本，将按所选档位 GOAMD64 ${lv} 重新下载安装（自动替换旧档位二进制）。`;
+  }
+  if (!confirm(tip)) return;
   btnUpApply.disabled = true;
   btnUpCheck.disabled = true;
   btnUpApply.textContent = "更新中…";
@@ -573,15 +842,12 @@ btnUpApply.onclick = async () => {
     const d = await api("/api/upgrade/apply", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ proxy: $("upProxy").checked }),
+      body: JSON.stringify({ proxy: $("upProxy").checked, level: lv }),
     });
-    if (d.ok && d.no_update) {
+    if (d.ok) {
       upVerdictShow(true, d.message);
-      btnUpApply.disabled = true;
-    } else if (d.ok) {
-      upVerdictShow(true, d.message);
-      $("uCur").textContent = $("uLatest").textContent;
-      btnUpApply.disabled = true;
+      if (d.version) $("uCur").textContent = "v" + d.version;
+      upHasUpdate = false;
     } else {
       upVerdictFail(d.error || "升级失败");
     }
@@ -590,7 +856,133 @@ btnUpApply.onclick = async () => {
   } catch (e) { upVerdictFail(e.message); upStatus.textContent = ""; }
   btnUpApply.textContent = "一键更新";
   btnUpCheck.disabled = false;
-  btnUpApply.disabled = !upHasUpdate;
+  upRefreshApplyBtn();
+};
+
+/* ---------- 安装包手动上传安装（.gz / .deb） ---------- */
+const upDebFile = $("upDebFile"), btnUpUpload = $("btnUpUpload"), upDebName = $("upDebName");
+upDebFile.onchange = () => {
+  const f = upDebFile.files[0];
+  upDebName.textContent = f ? f.name + "（" + fmtSize(f.size) + "）" : "未选择文件";
+  btnUpUpload.disabled = !f;
+};
+btnUpUpload.onclick = async () => {
+  const f = upDebFile.files[0];
+  if (!f) return;
+  if (!confirm(`确认上传 ${f.name} 并安装？\n将执行 dpkg 安装并重启 mihomo 服务，安装前自动备份当前版本。`)) return;
+  btnUpUpload.disabled = true;
+  btnUpUpload.textContent = "安装中…";
+  upStatus.textContent = "上传与安装可能需要 1-2 分钟，请勿关闭页面";
+  try {
+    const fd = new FormData(); fd.append("file", f);
+    const d = await api("/api/upgrade/upload", { method: "POST", body: fd });
+    if (d.ok) {
+      upVerdictShow(true, d.message);
+      if (d.version) $("uCur").textContent = "v" + d.version;
+      toast(d.message, true);
+      upHasUpdate = false;
+    } else {
+      upVerdictFail(d.error || "安装失败");
+      toast(d.error || "安装失败", false);
+    }
+    upStatus.textContent = "";
+    refreshStatus();
+  } catch (e) { upVerdictFail(e.message); upStatus.textContent = ""; }
+  btnUpUpload.disabled = false;
+  btnUpUpload.textContent = "上传安装";
+};
+
+/* ---------- metacubexd 面板（内置释放） ---------- */
+const btnDashInstall = $("btnDashInstall"), dashStatus = $("dashStatus");
+btnDashInstall.onclick = async () => {
+  if (!confirm("确认重新释放内置 metacubexd 面板？\n将覆盖程序同目录 metacubexd/ 下的文件。")) return;
+  btnDashInstall.disabled = true;
+  btnDashInstall.textContent = "释放中…";
+  dashStatus.textContent = "";
+  try {
+    const d = await api("/api/dashboard/install", { method: "POST" });
+    if (d.ok) {
+      dashStatus.textContent = "✅ " + d.message;
+      dashStatus.style.color = "var(--ok, #34d399)";
+      toast("面板已释放", true);
+    } else {
+      dashStatus.textContent = "❌ " + (d.error || "释放失败");
+      dashStatus.style.color = "#fb7185";
+      toast(d.error || "面板释放失败", false);
+    }
+  } catch (e) {
+    dashStatus.textContent = "❌ " + e.message;
+    dashStatus.style.color = "#fb7185";
+    toast(e.message, false);
+  }
+  btnDashInstall.disabled = false;
+  btnDashInstall.textContent = "重新释放面板";
+};
+
+/* ---------- 卸载 mihomo（token 二次确认） ---------- */
+const uninstallModal = $("uninstallModal"), btnUninstall = $("btnUninstall"),
+      btnUninstallConfirm = $("btnUninstallConfirm"), btnUninstallCancel = $("btnUninstallCancel"),
+      uninstallToken = $("uninstallToken"), uninstallMsg = $("uninstallMsg");
+
+function showUninstallMsg(text, ok) {
+  uninstallMsg.textContent = text;
+  uninstallMsg.style.display = "block";
+  uninstallMsg.style.color = ok ? "var(--ok, #34d399)" : "#fb7185";
+}
+
+function openUninstallModal() {
+  uninstallToken.value = "";
+  uninstallMsg.style.display = "none";
+  uninstallModal.style.display = "flex";
+  setTimeout(() => uninstallToken.focus(), 50);
+}
+
+function hideUninstallModal() {
+  uninstallModal.style.display = "none";
+}
+
+btnUninstall.onclick = openUninstallModal;
+btnUninstallCancel.onclick = hideUninstallModal;
+uninstallModal.onclick = e => { if (e.target === uninstallModal) hideUninstallModal(); };
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape" && uninstallModal.style.display === "flex") hideUninstallModal();
+});
+uninstallToken.addEventListener("keydown", e => {
+  if (e.key === "Enter") btnUninstallConfirm.click();
+});
+
+btnUninstallConfirm.onclick = async () => {
+  const tk = uninstallToken.value;
+  if (!tk) { showUninstallMsg("请先输入面板 Token", false); return; }
+  if (!confirm("确认卸载 mihomo？\n将删除二进制、systemd 服务与运行文件（config.yaml / cache.db / ruleset/），此操作不可撤销。")) return;
+  btnUninstallConfirm.disabled = true;
+  btnUninstallCancel.disabled = true;
+  btnUninstallConfirm.textContent = "卸载中…";
+  try {
+    const d = await api("/api/mihomo/uninstall", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: tk }),
+    });
+    if (d.ok) {
+      showUninstallMsg("✅ " + d.message, true);
+      toast("mihomo 已卸载", true);
+      setTimeout(hideUninstallModal, 2500);
+      refreshStatus();
+      $("uCur").innerHTML = '<span class="sk"></span>';
+      $("uLatest").innerHTML = '<span class="sk"></span>';
+      $("uLevel").textContent = "–";
+      upHasUpdate = false;
+      upRefreshApplyBtn();
+    } else {
+      showUninstallMsg("❌ " + (d.error || "卸载失败"), false);
+    }
+  } catch (e) {
+    showUninstallMsg("❌ " + e.message, false);
+  }
+  btnUninstallConfirm.disabled = false;
+  btnUninstallCancel.disabled = false;
+  btnUninstallConfirm.textContent = "确认卸载";
 };
 
 /* ---------- base.yaml 编辑 ---------- */
@@ -627,32 +1019,146 @@ btnBaseSave.onclick = async () => {
   btnBaseSave.disabled = false;
 };
 
-/* ---------- 初始化 ---------- */
-refreshStatus();
-setInterval(refreshStatus, 10000);
+/* ---------- 一键安装 mihomo ---------- */
+const installModal = $("installModal"), btnInstall = $("btnInstall"), btnInstallSkip = $("btnInstallSkip"), installSteps = $("installSteps");
 
-// 页面打开时自动检测 mihomo 更新
+function showInstallModal() {
+  installModal.style.display = "flex";
+}
+function hideInstallModal() {
+  installModal.style.display = "none";
+  installSteps.innerHTML = "";
+  installSteps.className = "install-steps";
+}
+
+btnInstallSkip.onclick = hideInstallModal;
+installModal.onclick = e => { if (e.target === installModal) hideInstallModal(); };
+
+function stepIcon(status) {
+  if (status === "running") return '<span class="step-spinner"></span>';
+  if (status === "done") return '<span class="step-check">✓</span>';
+  if (status === "error") return '<span class="step-cross">✗</span>';
+  return '<span class="step-dot"></span>';
+}
+
+function updateStep(stepId, status, message) {
+  let row = installSteps.querySelector(`[data-step="${stepId}"]`);
+  if (!row) {
+    row = document.createElement("div");
+    row.className = "step-row";
+    row.dataset.step = stepId;
+    row.innerHTML = `<span class="step-icon"></span><span class="step-msg"></span>`;
+    installSteps.appendChild(row);
+  }
+  row.className = "step-row " + status;
+  row.querySelector(".step-icon").innerHTML = stepIcon(status);
+  row.querySelector(".step-msg").textContent = message;
+  installSteps.scrollTop = installSteps.scrollHeight;
+}
+
+function showManualInstall(commands) {
+  const box = document.createElement("div");
+  box.className = "manual-install";
+  box.innerHTML = `
+    <div class="manual-head">
+      <span> 手动安装命令</span>
+      <button class="btn-copy">复制</button>
+    </div>
+    <pre class="manual-code"></pre>
+  `;
+  box.querySelector(".manual-code").textContent = commands;
+  box.querySelector(".btn-copy").onclick = () => {
+    navigator.clipboard.writeText(commands).then(() => {
+      box.querySelector(".btn-copy").textContent = "已复制";
+      setTimeout(() => box.querySelector(".btn-copy").textContent = "复制", 2000);
+    });
+  };
+  installSteps.appendChild(box);
+  installSteps.scrollTop = installSteps.scrollHeight;
+}
+
+btnInstall.onclick = () => {
+  btnInstall.disabled = true;
+  btnInstallSkip.disabled = true;
+  btnInstall.textContent = "安装中…";
+  installSteps.innerHTML = "";
+  installSteps.className = "install-steps show";
+
+  const es = new EventSource("/api/install/stream?token=" + encodeURIComponent(authToken));
+  let hasError = false;
+
+  es.onmessage = (ev) => {
+    let d;
+    try { d = JSON.parse(ev.data); } catch { return; }
+
+    if (d.step === "done") {
+      updateStep("done", "done", d.message);
+      es.close();
+      btnInstall.textContent = "完成";
+      setTimeout(() => { hideInstallModal(); refreshStatus(); location.reload(); }, 2000);
+      return;
+    }
+
+    if (d.status === "error") {
+      hasError = true;
+      updateStep(d.step, "error", d.message);
+      if (d.manual) showManualInstall(d.manual);
+      es.close();
+      btnInstall.disabled = false;
+      btnInstallSkip.disabled = false;
+      btnInstall.textContent = "重试";
+      return;
+    }
+
+    updateStep(d.step, d.status, d.message);
+  };
+
+  es.onerror = () => {
+    es.close();
+    if (!hasError) {
+      updateStep("connection", "error", "连接中断");
+      btnInstall.disabled = false;
+      btnInstallSkip.disabled = false;
+      btnInstall.textContent = "重试";
+    }
+  };
+};
+
+/* ---------- 初始化 ---------- */
+
 (async () => {
+  if (!authToken) {
+    showLoginModal();
+    return;
+  }
+  let status;
+  try {
+    status = await api("/api/status");
+  } catch (e) {
+    authToken = "";
+    localStorage.removeItem("clashaux_token");
+    showLoginModal();
+    return;
+  }
+  refreshStatus();
+  setInterval(refreshStatus, 10000);
+
+  if (!status.mihomo_installed) {
+    showInstallModal();
+    return;
+  }
+
+  // mihomo 已安装时才检测更新
   try {
     const d = await api("/api/upgrade/check");
-    if (d.ok) {
-      $("uCur").textContent = "v" + d.current;
-      $("uLatest").textContent = "v" + d.latest;
-      $("uLevel").textContent = d.level;
-      if (!d.has_update) {
-        const v = $("upVerdict");
-        v.className = "verdict show";
-        $("upBadge").className = "badge on";
-        $("upBadge").textContent = `已是最新版本 v${d.current}`;
-        $("upOut").style.display = "none";
-      }
-    }
+    upCheckRender(d);
   } catch (e) { /* GitHub 不通就静默 */ }
 })();
 
 refreshBackups();
 refreshSubs();
 loadBase();
+loadBasic();
 </script>
 </body>
 </html>

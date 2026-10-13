@@ -13,15 +13,22 @@ from pathlib import Path
 
 import yaml
 
-from core.paths import DATA_DIR
+from core import basic as basicm
+from core.paths import BUNDLE_DIR, DATA_DIR, MIHOMO_HOME
 
 BASE_FILE = DATA_DIR / "base.yaml"
 BACKUP_DIR = DATA_DIR / "backups"
 KEEP_BACKUPS = 5
 
-# /etc/mihomo/config.yaml 是指向真实配置的软链接；
-# 必须写入解析后的真实路径，否则 os.replace 会把软链接整个替换掉。
-LIVE_LINK = Path("/etc/mihomo/config.yaml")
+# 打包后 base.yaml 在 BUNDLE_DIR（sys._MEIPASS），首次运行时复制到 DATA_DIR
+if not BASE_FILE.exists():
+    _bundled = BUNDLE_DIR / "base.yaml"
+    if _bundled.exists():
+        BASE_FILE.write_bytes(_bundled.read_bytes())
+
+# 生效配置路径（mihomo 数据目录下）。若用户将其设为软链接（指向外部真实配置），
+# 写入时会先 resolve 再写目标路径，避免 os.replace 把软链接整个替换掉。
+LIVE_LINK = Path(MIHOMO_HOME) / "config.yaml"
 
 # 属于"正文"的顶层键：新文件从第一个命中的键开始保留到文件尾
 BODY_KEYS = ("proxies", "proxy-groups", "proxy-providers", "rule-providers", "rules", "sub-rules")
@@ -66,10 +73,43 @@ def strip_header(text: str) -> str:
 
 
 def build_candidate(new_text: str) -> str:
-    """base.yaml 头 + 新文件正文 = 候选配置。"""
-    base = BASE_FILE.read_text(encoding="utf-8").rstrip("\n")
+    """基础设置头 + base.yaml 头 + 新文件正文 = 候选配置。
+
+    基础设置（external-controller/external-ui/secret/mixed-port）始终置于最头部；
+    base.yaml 中如残留这些键会被剥离，避免重复定义。
+    """
+    basics = basicm.render(basicm.load())
+    base = basicm.strip_keys(BASE_FILE.read_text(encoding="utf-8")).rstrip("\n")
     body = strip_header(new_text).strip("\n")
-    return f"{base}\n\n{body}\n"
+    return f"{basics}\n{base}\n\n{body}\n"
+
+
+def apply_basic_settings(basics: dict) -> dict:
+    """把基础设置应用到当前生效配置：置顶重写头部 → 校验 → 备份 → 原子写入。
+
+    重载由调用方执行。未找到生效配置时只保存不写入。
+    """
+    header = basicm.render(basics)
+    try:
+        path = live_file()
+        text = path.read_text(encoding="utf-8")
+    except ConfigError:
+        return {"ok": True, "written": False,
+                "message": "已保存，未检测到生效配置，下次换头/安装时生效"}
+    candidate = header + "\n" + basicm.strip_keys(text).rstrip("\n") + "\n"
+    ok, out = validate(candidate)
+    if not ok:
+        return {"ok": False, "error": "mihomo -t 校验未通过", "output": out}
+    backup = backup_current()
+    fd, tmp = tempfile.mkstemp(suffix=".yaml", dir=str(path.parent))
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(candidate)
+        os.chmod(tmp, 0o644)
+        os.replace(tmp, path)
+    except PermissionError as e:
+        raise ConfigError(f"写入 {path} 失败，需要 root 权限: {e}") from e
+    return {"ok": True, "written": True, "backup": backup}
 
 
 def validate(text: str) -> tuple[bool, str]:
@@ -78,7 +118,7 @@ def validate(text: str) -> tuple[bool, str]:
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as f:
             f.write(text)
-        rc, out = _run(["mihomo", "-t", "-d", "/etc/mihomo", "-f", tmp], timeout=120)
+        rc, out = _run(["mihomo", "-t", "-d", str(MIHOMO_HOME), "-f", tmp], timeout=120)
     finally:
         os.unlink(tmp)
     tail = "\n".join(out.splitlines()[-30:])
@@ -153,11 +193,12 @@ def rollback(name: str) -> tuple[bool, str]:
         return False, f"备份文件校验未通过: {out}"
     if LIVE_LINK.exists():
         backup_current()
-    fd, tmp = tempfile.mkstemp(suffix=".yaml", dir=str(live_file().parent))
+    path = live_file()
+    fd, tmp = tempfile.mkstemp(suffix=".yaml", dir=str(path.parent))
     with os.fdopen(fd, "w", encoding="utf-8") as f:
         f.write(text)
     os.chmod(tmp, 0o644)
-    os.replace(tmp, live_file())
+    os.replace(tmp, path)
     return True, f"已回滚到 {name}"
 
 

@@ -4,12 +4,10 @@ import re
 from pathlib import Path
 from urllib.parse import urlparse
 
-import httpx
-
+from core import net
 from core.paths import DATA_DIR
 
 SUBS_FILE = DATA_DIR / "subscriptions.json"
-LOCAL_PROXY = "http://127.0.0.1:7890"
 
 
 class SubscriptionError(Exception):
@@ -17,24 +15,21 @@ class SubscriptionError(Exception):
 
 
 def fetch(url: str, use_proxy: bool = False) -> str:
-    """拉取订阅内容，返回文本。"""
+    """拉取订阅内容，返回文本。
+
+    直连失败时自动尝试 DoH 解析与本机代理兜底（use_proxy=True 时仅走本机代理）。
+    """
     url = url.strip()
     if not re.match(r"^https?://", url):
         raise SubscriptionError("订阅链接必须以 http:// 或 https:// 开头")
     try:
-        resp = httpx.get(
-            url,
-            timeout=30,
-            follow_redirects=True,
-            proxy=LOCAL_PROXY if use_proxy else None,
-            headers={"User-Agent": "clashaux/0.1"},
-        )
-        resp.raise_for_status()
-    except httpx.HTTPError as e:
-        raise SubscriptionError(f"拉取失败: {e}") from e
-    if not resp.text.strip():
+        resp = net.http_get(url, timeout=30, use_proxy=use_proxy)
+    except net.NetError as e:
+        raise SubscriptionError(f"拉取失败（直连/DoH/代理均未成功）: {e}") from e
+    text = resp.text
+    if not text.strip():
         raise SubscriptionError("订阅返回内容为空")
-    return resp.text
+    return text
 
 
 def list_subs() -> list[dict]:

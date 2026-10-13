@@ -19,3 +19,10 @@ def _resolve() -> tuple[Path, Path]:
 
 
 BUNDLE_DIR, DATA_DIR = _resolve()
+
+# mihomo 安装布局：二进制与数据目录都在面板程序目录内
+# （external-ui 等均位于 mihomo home 内，无需 SAFE_PATHS 放行）
+MIHOMO_BIN = DATA_DIR / "mihomo"
+MIHOMO_HOME = DATA_DIR
+
+LOCAL_PROXY = "http://127.0.0.1:7890"

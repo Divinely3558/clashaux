@@ -13,7 +13,7 @@ _PROPS = (
     "ActiveEnterTimestamp",
     "MemoryCurrent",
 )
-_ACTIONS = ("enable", "start", "reload")
+_ACTIONS = ("enable", "start", "stop", "restart", "reload")
 
 
 def _run(args: list[str], timeout: float = 30) -> tuple[int, str]:
@@ -63,7 +63,7 @@ def service_action(action: str) -> tuple[bool, str]:
     rc, out = _run(["systemctl", action, UNIT])
     ok = rc == 0
     # start/reload 后短暂探活
-    if ok and action in ("start", "reload"):
+    if ok and action in ("start", "restart", "reload"):
         time.sleep(1.0)
         _, state = _run(["systemctl", "is-active", UNIT])
         if state != "active":
@@ -92,7 +92,8 @@ def journal_follow() -> Iterator[str]:
         bufsize=1,
     )
     try:
-        assert p.stdout is not None
+        if p.stdout is None:
+            return
         for line in p.stdout:
             yield line.rstrip("\n")
     finally:

@@ -12,9 +12,14 @@ wheels/
 
 # Runtime generated files
 clashaux.json
+basic.json
 backups/
 subscriptions.json
 config.yaml
+metacubexd/
+mihomo
+cache.db
+ruleset/
 
 # 归档的不需要文件
 .text/
