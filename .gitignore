@@ -1,0 +1,20 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+*.spec
+
+# Virtual environments
+.venv
+
+# Runtime generated files
+clashaux.json
+backups/
+subscriptions.json
+config.yaml
+
+# 归档的不需要文件
+.text/

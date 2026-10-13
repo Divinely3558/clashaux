@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>clashaux · mihomo 辅助面板</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header>
+  <div class="brand-mark">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 12h4l3-8 3 16 3-8h4"/>
+    </svg>
+  </div>
+  <div>
+    <h1>clashaux</h1>
+    <div class="sub">mihomo 辅助面板</div>
+  </div>
+  <span id="stateBadge" class="badge unknown" style="margin-left:auto">检测中</span>
+</header>
+<main>
+  <!-- 分区导航 -->
+  <nav class="tabs">
+    <a href="#cardService"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="8" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/><line x1="7" y1="8" x2="7" y2="8"/><line x1="7" y1="17" x2="7" y2="17"/></svg>服务</a>
+    <a href="#secLogs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>日志</a>
+    <a href="#secUpdate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>更新内核</a>
+    <a href="#secBase"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>头部模板</a>
+    <a href="#secConfig"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>配置更新</a>
+    <a href="#secSub"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a9 9 0 019 9M4 4a16 16 0 0116 16"/><circle cx="5" cy="19" r="1"/></svg>订阅</a>
+    <a href="#secBackup"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v13H3V8M1 3h22v5H1zM10 12h4"/></svg>备份</a>
+  </nav>
+
+  <div class="col-2">
+    <section class="card service" id="cardService">
+      <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="8" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/></svg>服务控制</h2>
+      <div class="tiles">
+        <div class="tile"><div class="label">开机自启</div><div class="num small" id="pEnabled"><span class="sk"></span></div></div>
+        <div class="tile"><div class="label">主进程 PID</div><div class="num" id="pPid"><span class="sk"></span></div></div>
+        <div class="tile"><div class="label">内存占用</div><div class="num" id="pMem"><span class="sk"></span></div></div>
+        <div class="tile"><div class="label">启动时间</div><div class="num small" id="pSince"><span class="sk"></span></div></div>
+      </div>
+      <div class="actions">
+        <div class="btns">
+          <button class="btn" data-act="enable">设为自启</button>
+          <button class="btn" data-act="start">启动服务</button>
+          <button class="btn primary" data-act="reload">重载配置</button>
+          <button class="btn" id="btnRefresh">刷新状态</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" id="secLogs">
+      <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>运行日志</h2>
+      <div class="toolbar">
+        <select id="logN">
+          <option value="50">50 行</option>
+          <option value="200" selected>200 行</option>
+          <option value="500">500 行</option>
+        </select>
+        <button class="btn" id="btnLogs">加载日志</button>
+        <label class="switch"><input type="checkbox" id="logLive">实时跟踪</label>
+      </div>
+      <pre class="log" id="logBox">暂无日志</pre>
+    </section>
+  </div>
+
+  <section class="card wide" id="secUpdate">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>mihomo 更新</h2>
+    <p class="hint">检测 GitHub 最新版本并一键升级（deb 安装路径，自动匹配 CPU 的 GOAMD64 档位）。升级前自动备份旧版二进制，失败可回滚。</p>
+    <div class="kv" style="grid-template-columns:auto 1fr auto 1fr auto 1fr">
+      <dt>当前版本</dt><dd id="uCur"><span class="sk"></span></dd>
+      <dt>最新版本</dt><dd id="uLatest"><span class="sk"></span></dd>
+      <dt>CPU 档位</dt><dd id="uLevel"><span class="sk"></span></dd>
+    </div>
+    <div class="file-row">
+      <button class="btn" id="btnUpCheck">检查更新</button>
+      <button class="btn primary" id="btnUpApply" disabled>一键更新</button>
+      <label class="switch"><input type="checkbox" id="upProxy">走本机代理</label>
+      <span class="file-name" id="upStatus"></span>
+    </div>
+    <div class="verdict" id="upVerdict">
+      <span class="badge" id="upBadge">–</span>
+      <pre class="out" id="upOut" style="display:none"></pre>
+    </div>
+  </section>
+
+  <section class="card wide" id="secBase">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>base.yaml · 头部模板</h2>
+    <p class="hint warn">修改 base.yaml 后不影响当前运行的 mihomo，只有下次换头（上传/粘贴/订阅）时才会用新模板。</p>
+    <textarea id="baseEditor" class="input" style="width:100%;min-height:280px" placeholder="加载中…" spellcheck="false"></textarea>
+    <div class="file-row" style="margin-top:12px">
+      <button class="btn" id="btnBaseReload">重新加载</button>
+      <button class="btn primary" id="btnBaseSave">保存 base.yaml</button>
+      <span class="file-name" id="baseDirty" style="color:var(--warn)">● 未保存</span>
+    </div>
+  </section>
+
+  <section class="card wide" id="secConfig">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>配置更新</h2>
+    <p class="hint">上传 config.yaml 或直接粘贴配置内容，面板会自动去掉它的头部、套用 base.yaml 头部，经 mihomo -t 校验通过后才写入生效，原配置自动备份。</p>
+    <div class="file-row">
+      <label class="btn">选择 config.yaml<input type="file" id="cfgFile" accept=".yaml,.yml" hidden></label>
+      <span class="file-name" id="cfgName">未选择文件</span>
+    </div>
+    <textarea id="cfgPaste" class="input" style="width:100%;min-height:220px;margin-top:12px" placeholder="或直接粘贴 config.yaml 内容到此…" spellcheck="false"></textarea>
+    <div class="file-row" style="margin-top:12px">
+      <button class="btn" id="btnPreview" disabled>预览校验</button>
+      <button class="btn primary" id="btnApply" disabled>写入并重载</button>
+      <button class="btn" id="btnClear">清空</button>
+    </div>
+    <div class="verdict" id="verdict">
+      <span class="badge" id="vBadge">–</span>
+      <div class="stats" id="vStats" style="margin:0"></div>
+      <pre class="out" id="vOut" style="display:none"></pre>
+    </div>
+  </section>
+
+  <section class="card wide" id="secSub">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a9 9 0 019 9M4 4a16 16 0 0116 16"/><circle cx="5" cy="19" r="1"/></svg>订阅更新</h2>
+    <p class="hint">输入订阅链接（Clash YAML 配置），面板自动拉取、换头、校验，通过后写入重载。可保存常用订阅一键更新。</p>
+    <div class="file-row">
+      <input type="text" class="input" id="subUrl" placeholder="https://… 订阅链接">
+      <label class="switch"><input type="checkbox" id="subProxy">走本机代理</label>
+      <button class="btn" id="btnSubPreview">拉取预览</button>
+      <button class="btn primary" id="btnSubApply" disabled>一键应用</button>
+    </div>
+    <div class="verdict" id="subVerdict">
+      <span class="badge" id="sBadge">–</span>
+      <div class="stats" id="sStats" style="margin:0"></div>
+      <pre class="out" id="sOut" style="display:none"></pre>
+    </div>
+    <div class="file-row" style="margin-top:16px">
+      <input type="text" class="input" id="subName" placeholder="订阅名称（保存用，可留空)">
+      <button class="btn" id="btnSubSave">保存订阅</button>
+    </div>
+    <div class="backups" id="subList" style="margin-top:12px"><div class="empty">暂无已保存订阅</div></div>
+  </section>
+
+  <section class="card wide" id="secBackup">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v13H3V8M1 3h22v5H1zM10 12h4"/></svg>配置备份（最近 5 份）</h2>
+    <div class="backups" id="backupList"><div class="empty">加载中…</div></div>
+  </section>
+</main>
+<div id="toasts"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const fmtSize = n => n > 1048576 ? (n / 1048576).toFixed(1) + " MB" : (n / 1024).toFixed(1) + " KB";
+const fmtTime = ts => new Date(ts * 1000).toLocaleString("zh-CN", { hour12: false });
+
+function toast(msg, ok = true) {
+  const el = document.createElement("div");
+  el.className = "toast" + (ok ? "" : " err");
+  el.textContent = (ok ? "✅ " : "❌ ") + msg;
+  $("toasts").appendChild(el);
+  setTimeout(() => el.remove(), 5000);
+}
+
+async function api(url, opts) {
+  const r = await fetch(url, opts);
+  if (!r.ok) throw new Error("HTTP " + r.status);
+  return r.json();
+}
+
+/* ---------- 服务状态 ---------- */
+async function refreshStatus() {
+  try {
+    const d = await api("/api/status");
+    const s = d.service, c = d.config;
+    const badge = $("stateBadge");
+    if (s.active === "active") { badge.className = "badge on"; badge.textContent = "运行中"; }
+    else if (s.active === "failed") { badge.className = "badge off"; badge.textContent = "运行失败"; }
+    else if (s.active === "inactive") { badge.className = "badge unknown"; badge.textContent = "已停止"; }
+    else { badge.className = "badge unknown"; badge.textContent = s.active; }
+    const enMap = { enabled: "已开启", disabled: "已关闭", static: "静态", masked: "已屏蔽", generated: "已生成", indirect: "间接" };
+    $("pEnabled").textContent = enMap[s.enabled] || s.enabled || "–";
+    $("pPid").textContent = s.pid && s.pid !== "0" ? s.pid : "–";
+    $("pSince").textContent = s.since || "–";
+    $("pMem").textContent = s.memory ? (s.memory / 1048576).toFixed(1) + " MB" : "–";
+    if (d.mihomo_version) { $("uCur").textContent = "v" + d.mihomo_version; }
+  } catch (e) { /* 静默轮询失败 */ }
+}
+
+document.querySelectorAll("[data-act]").forEach(b => {
+  b.onclick = async () => {
+    b.disabled = true;
+    try {
+      const d = await api("/api/service/" + b.dataset.act, { method: "POST" });
+      toast(d.message, d.ok);
+      refreshStatus();
+    } catch (e) { toast(e.message, false); }
+    b.disabled = false;
+  };
+});
+$("btnRefresh").onclick = async () => {
+  refreshStatus();
+  try {
+  } catch (e) { toast(e.message, false); }
+};
+
+/* ---------- 日志 ---------- */
+const logBox = $("logBox");
+let es = null;
+
+function nearBottom() {
+  return logBox.scrollHeight - logBox.scrollTop - logBox.clientHeight < 60;
+}
+function appendLog(line) {
+  const stick = nearBottom();
+  if (logBox.textContent === "暂无日志") logBox.textContent = "";
+  logBox.textContent += line + "\n";
+  if (stick) logBox.scrollTop = logBox.scrollHeight;
+}
+$("btnLogs").onclick = async () => {
+  try {
+    const d = await api("/api/logs?n=" + $("logN").value);
+    logBox.textContent = d.lines.join("\n") || "（暂无日志）";
+    logBox.scrollTop = logBox.scrollHeight;
+  } catch (e) { toast(e.message, false); }
+};
+$("logLive").onchange = e => {
+  if (e.target.checked) {
+    if (logBox.textContent === "暂无日志") $("btnLogs").click();
+    es = new EventSource("/api/logs/stream");
+    es.onmessage = ev => appendLog(ev.data);
+    es.onerror = () => { es.close(); es = null; e.target.checked = false; };
+    toast("已开启实时跟踪");
+  } else if (es) {
+    es.close(); es = null;
+    toast("已停止实时跟踪");
+  }
+};
+
+/* ---------- 配置更新 ---------- */
+const cfgFile = $("cfgFile"), cfgPaste = $("cfgPaste"), btnPreview = $("btnPreview"), btnApply = $("btnApply"), btnClear = $("btnClear");
+
+function cfgHasContent() {
+  return !!cfgFile.files[0] || !!cfgPaste.value.trim();
+}
+function cfgResetVerdict() {
+  $("verdict").className = "verdict";
+  btnApply.disabled = true;
+}
+cfgFile.onchange = () => {
+  const f = cfgFile.files[0];
+  $("cfgName").textContent = f ? f.name + "（" + fmtSize(f.size) + "）" : "未选择文件";
+  btnPreview.disabled = !cfgHasContent();
+  cfgResetVerdict();
+};
+cfgPaste.oninput = () => {
+  btnPreview.disabled = !cfgHasContent();
+  cfgResetVerdict();
+};
+btnClear.onclick = () => {
+  cfgFile.value = "";
+  $("cfgName").textContent = "未选择文件";
+  cfgPaste.value = "";
+  btnPreview.disabled = true;
+  btnApply.disabled = true;
+  cfgResetVerdict();
+};
+async function cfgPreview() {
+  btnPreview.disabled = true; btnApply.disabled = true;
+  try {
+    const f = cfgFile.files[0];
+    let d;
+    if (f) {
+      const fd = new FormData(); fd.append("file", f);
+      d = await api("/api/config/preview", { method: "POST", body: fd });
+    } else {
+      d = await api("/api/config/preview-text", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: cfgPaste.value }),
+      });
+    }
+    const v = $("verdict");
+    v.className = "verdict show";
+    const badge = $("vBadge");
+    if (d.ok) {
+      badge.className = "badge on"; badge.textContent = "校验通过";
+      $("vOut").style.display = "none";
+      btnApply.disabled = false;
+    } else {
+      badge.className = "badge off"; badge.textContent = "校验未通过";
+      $("vOut").style.display = "block";
+      $("vOut").textContent = (d.error || "") + (d.output ? "\n" + d.output : "");
+      btnApply.disabled = true;
+    }
+    if (d.stats) {
+      const s = d.stats;
+      $("vStats").innerHTML =
+        `<div class="stat"><b>${s.proxies}</b><span>节点</span></div>` +
+        `<div class="stat"><b>${s.groups}</b><span>策略组</span></div>` +
+        `<div class="stat"><b>${s.providers}</b><span>节点订阅</span></div>` +
+        `<div class="stat"><b>${s.rules}</b><span>规则</span></div>` +
+        `<div class="stat"><b>${s.rule_providers}</b><span>规则集</span></div>`;
+    }
+  } catch (e) { toast(e.message, false); }
+  btnPreview.disabled = !cfgHasContent();
+}
+btnPreview.onclick = cfgPreview;
+btnApply.onclick = async () => {
+  if (!confirm("确认写入生效配置并重载 mihomo？当前配置会自动备份。")) return;
+  btnApply.disabled = true; btnPreview.disabled = true;
+  try {
+    const f = cfgFile.files[0];
+    let d;
+    if (f) {
+      const fd = new FormData(); fd.append("file", f);
+      d = await api("/api/config/apply", { method: "POST", body: fd });
+    } else {
+      d = await api("/api/config/apply-text", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: cfgPaste.value }),
+      });
+    }
+    toast(d.message || d.error, d.ok);
+    if (d.backup) toast("已备份为 " + d.backup);
+    refreshStatus();
+    refreshBackups();
+    if (d.ok) cfgResetVerdict();
+  } catch (e) { toast(e.message, false); }
+  btnApply.disabled = false; btnPreview.disabled = !cfgHasContent();
+};
+
+/* ---------- 备份 ---------- */
+async function refreshBackups() {
+  try {
+    const d = await api("/api/backups");
+    const box = $("backupList");
+    if (!d.items.length) { box.innerHTML = '<div class="empty">暂无备份</div>'; return; }
+    box.innerHTML = "";
+    d.items.forEach(it => {
+      const row = document.createElement("div");
+      row.className = "backup";
+      row.innerHTML = `<span class="name">${it.name}</span>` +
+        `<span class="meta">${fmtSize(it.size)} · ${fmtTime(it.mtime)}</span>`;
+      const btn = document.createElement("button");
+      btn.className = "btn danger";
+      btn.textContent = "回滚";
+      btn.onclick = () => rollback(it.name);
+      row.appendChild(btn);
+      box.appendChild(row);
+    });
+  } catch (e) { /* 静默 */ }
+}
+async function rollback(name) {
+  if (!confirm("确认回滚到 " + name + "？当前配置会先再备份一次。")) return;
+  try {
+    const d = await api("/api/backups/" + encodeURIComponent(name) + "/rollback", { method: "POST" });
+    toast(d.message || d.error, d.ok);
+    refreshStatus();
+    refreshBackups();
+  } catch (e) { toast(e.message, false); }
+}
+
+/* ---------- 订阅 ---------- */
+const subUrl = $("subUrl"), btnSubPreview = $("btnSubPreview"), btnSubApply = $("btnSubApply");
+
+function renderVerdict(badgeEl, statsEl, outEl, d) {
+  const v = badgeEl.parentElement;
+  v.className = "verdict show";
+  if (d.ok) {
+    badgeEl.className = "badge on";
+    badgeEl.textContent = d.fetched_chars ? `拉取成功（${(d.fetched_chars / 1024).toFixed(1)} KB）· 校验通过` : "校验通过";
+    outEl.style.display = "none";
+  } else {
+    badgeEl.className = "badge off";
+    badgeEl.textContent = "失败";
+    outEl.style.display = "block";
+    outEl.textContent = (d.error || "") + (d.output ? "\n" + d.output : "");
+  }
+  if (d.stats) {
+    const s = d.stats;
+    statsEl.innerHTML =
+      `<div class="stat"><b>${s.proxies}</b><span>节点</span></div>` +
+      `<div class="stat"><b>${s.groups}</b><span>策略组</span></div>` +
+      `<div class="stat"><b>${s.providers}</b><span>节点订阅</span></div>` +
+      `<div class="stat"><b>${s.rules}</b><span>规则</span></div>` +
+      `<div class="stat"><b>${s.rule_providers}</b><span>规则集</span></div>`;
+  }
+}
+
+function subBody(url) {
+  return JSON.stringify({ url: (url ?? subUrl.value).trim(), proxy: $("subProxy").checked });
+}
+
+subUrl.oninput = () => { btnSubApply.disabled = !subUrl.value.trim(); };
+
+btnSubPreview.onclick = async () => {
+  if (!subUrl.value.trim()) { toast("请先填写订阅链接", false); return; }
+  btnSubPreview.disabled = true;
+  btnSubPreview.textContent = "拉取中…";
+  try {
+    const d = await api("/api/sub/preview", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: subBody(),
+    });
+    renderVerdict($("sBadge"), $("sStats"), $("sOut"), d);
+  } catch (e) { toast(e.message, false); }
+  btnSubPreview.disabled = false;
+  btnSubPreview.textContent = "拉取预览";
+};
+btnSubApply.onclick = async () => {
+  if (!subUrl.value.trim()) return;
+  if (!confirm("确认拉取订阅并写入生效配置？当前配置会自动备份。")) return;
+  btnSubApply.disabled = true;
+  btnSubPreview.disabled = true;
+  btnSubApply.textContent = "应用中…";
+  try {
+    const d = await api("/api/sub/apply", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: subBody(),
+    });
+    if (d.ok) {
+      toast(d.message || "订阅已生效", true);
+      $("sBadge").className = "badge on";
+      $("sBadge").parentElement.className = "verdict show";
+      $("sBadge").textContent = `已生效（${d.stats ? d.stats.proxies + " 节点" : "写入成功"}）`;
+      $("sOut").style.display = "none";
+    } else {
+      toast(d.error || "应用失败", false);
+      renderVerdict($("sBadge"), $("sStats"), $("sOut"), d);
+    }
+    refreshStatus();
+    refreshBackups();
+  } catch (e) { toast(e.message, false); }
+  btnSubApply.disabled = false;
+  btnSubPreview.disabled = false;
+  btnSubApply.textContent = "一键应用";
+};
+$("btnSubSave").onclick = async () => {
+  if (!subUrl.value.trim()) { toast("请先填写订阅链接", false); return; }
+  try {
+    const d = await api("/api/subs/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: subUrl.value.trim(), name: $("subName").value.trim(), proxy: $("subProxy").checked }),
+    });
+    toast(d.message, d.ok);
+    if (d.ok) { $("subName").value = ""; refreshSubs(); }
+  } catch (e) { toast(e.message, false); }
+};
+
+async function refreshSubs() {
+  try {
+    const d = await api("/api/subs");
+    const box = $("subList");
+    if (!d.items.length) { box.innerHTML = '<div class="empty">暂无已保存订阅</div>'; return; }
+    box.innerHTML = "";
+    d.items.forEach(it => {
+      const row = document.createElement("div");
+      row.className = "backup sub-row";
+      row.innerHTML = `<span class="name">${it.name}${it.proxy ? " · 走代理" : ""}</span><span class="url" title="${it.url}">${it.url}</span><span class="file-name sub-status"></span>`;
+      const status = row.querySelector(".sub-status");
+      const btnUpd = document.createElement("button");
+      btnUpd.className = "btn primary";
+      btnUpd.textContent = "一键更新";
+      btnUpd.onclick = async () => {
+        if (!confirm(`确认拉取「${it.name}」并写入生效？`)) return;
+        btnUpd.disabled = true;
+        btnUpd.textContent = "更新中…";
+        status.textContent = "";
+        try {
+          const r = await api("/api/sub/apply", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url: it.url, proxy: !!it.proxy }),
+          });
+          const t = new Date().toLocaleTimeString("zh-CN", { hour12: false });
+          status.textContent = r.ok ? `✅ ${t} 已生效（${r.stats ? r.stats.proxies + " 节点" : "写入成功"}）` : `❌ ${t} ${r.error || "失败"}`;
+          status.style.color = r.ok ? "var(--ok, #34d399)" : "#fb7185";
+          toast(r.ok ? `订阅「${it.name}」已生效` : `「${it.name}」更新失败: ${r.error || "未知错误"}`, r.ok);
+          refreshStatus();
+          refreshBackups();
+        } catch (e) {
+          status.textContent = "❌ " + e.message;
+          status.style.color = "#fb7185";
+          toast(e.message, false);
+        }
+        btnUpd.disabled = false;
+        btnUpd.textContent = "一键更新";
+      };
+      const btnRen = document.createElement("button");
+      btnRen.className = "btn";
+      btnRen.textContent = "重命名";
+      btnRen.onclick = async () => {
+        const nn = prompt(`将订阅「${it.name}」重命名为：`, it.name);
+        if (!nn || !nn.trim() || nn.trim() === it.name) return;
+        try {
+          const r = await api("/api/subs/rename", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: it.name, new_name: nn.trim() }),
+          });
+          toast(r.message || r.error, r.ok);
+          refreshSubs();
+        } catch (e) { toast(e.message, false); }
+      };
+      const btnDel = document.createElement("button");
+      btnDel.className = "btn danger";
+      btnDel.textContent = "删除";
+      btnDel.onclick = async () => {
+        if (!confirm(`删除订阅「${it.name}」？`)) return;
+        try {
+          const r = await api("/api/subs/delete", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: it.name }),
+          });
+          toast(r.message, r.ok);
+          refreshSubs();
+        } catch (e) { toast(e.message, false); }
+      };
+      row.appendChild(btnUpd);
+      row.appendChild(btnRen);
+      row.appendChild(btnDel);
+      box.appendChild(row);
+    });
+  } catch (e) { /* 静默 */ }
+}
+
+/* ---------- mihomo 更新 ---------- */
+const btnUpCheck = $("btnUpCheck"), btnUpApply = $("btnUpApply"), upStatus = $("upStatus");
+let upHasUpdate = false;
+
+function upVerdictShow(ok, text) {
+  const v = $("upVerdict");
+  v.className = "verdict show";
+  $("upBadge").className = "badge " + (ok ? "on" : "off");
+  $("upBadge").textContent = text;
+  $("upOut").style.display = "none";
+}
+function upVerdictFail(text) {
+  const v = $("upVerdict");
+  v.className = "verdict show";
+  $("upBadge").className = "badge off";
+  $("upBadge").textContent = "失败";
+  $("upOut").style.display = "block";
+  $("upOut").textContent = text;
+}
+btnUpCheck.onclick = async () => {
+  btnUpCheck.disabled = true;
+  btnUpCheck.textContent = "检测中…";
+  upStatus.textContent = "";
+  try {
+    const d = await api("/api/upgrade/check?proxy=" + $("upProxy").checked);
+    if (!d.ok) { upVerdictFail(d.error || "检测失败"); return; }
+    $("uCur").textContent = "v" + d.current;
+    $("uLatest").textContent = "v" + d.latest;
+    $("uLevel").textContent = d.level;
+    upHasUpdate = d.has_update;
+    btnUpApply.disabled = !d.has_update;
+    upVerdictShow(d.has_update, d.has_update
+      ? `发现新版本 v${d.latest}（将下载 ${d.deb_name}）`
+      : `已是最新版本 v${d.current}`);
+  } catch (e) { upVerdictFail(e.message); }
+  btnUpCheck.disabled = false;
+  btnUpCheck.textContent = "检查更新";
+};
+btnUpApply.onclick = async () => {
+  if (!confirm("确认升级 mihomo？\n将下载 deb 安装并重启 mihomo 服务，升级前自动备份当前版本。")) return;
+  btnUpApply.disabled = true;
+  btnUpCheck.disabled = true;
+  btnUpApply.textContent = "更新中…";
+  upStatus.textContent = "下载与安装可能需要 1-2 分钟，请勿关闭页面";
+  try {
+    const d = await api("/api/upgrade/apply", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ proxy: $("upProxy").checked }),
+    });
+    if (d.ok && d.no_update) {
+      upVerdictShow(true, d.message);
+      btnUpApply.disabled = true;
+    } else if (d.ok) {
+      upVerdictShow(true, d.message);
+      $("uCur").textContent = $("uLatest").textContent;
+      btnUpApply.disabled = true;
+    } else {
+      upVerdictFail(d.error || "升级失败");
+    }
+    upStatus.textContent = "";
+    refreshStatus();
+  } catch (e) { upVerdictFail(e.message); upStatus.textContent = ""; }
+  btnUpApply.textContent = "一键更新";
+  btnUpCheck.disabled = false;
+  btnUpApply.disabled = !upHasUpdate;
+};
+
+/* ---------- base.yaml 编辑 ---------- */
+const baseEditor = $("baseEditor"), btnBaseSave = $("btnBaseSave"), btnBaseReload = $("btnBaseReload"), baseDirty = $("baseDirty");
+let baseOriginal = "";
+async function loadBase() {
+  try {
+    const d = await api("/api/base");
+    baseEditor.value = d.text;
+    baseOriginal = d.text;
+    baseDirty.style.display = "none";
+  } catch (e) { toast(e.message, false); }
+}
+baseEditor.oninput = () => {
+  baseDirty.style.display = baseEditor.value !== baseOriginal ? "inline" : "none";
+};
+btnBaseReload.onclick = () => {
+  if (baseEditor.value !== baseOriginal && !confirm("当前编辑未保存，确定重新加载覆盖？")) return;
+  loadBase();
+};
+btnBaseSave.onclick = async () => {
+  if (!baseEditor.value.trim()) { toast("内容不能为空", false); return; }
+  if (!confirm("确定保存 base.yaml？\n\n此操作不影响当前运行的 mihomo，只有下次换头（上传/粘贴/订阅）时才会使用新模板。")) return;
+  btnBaseSave.disabled = true;
+  try {
+    const d = await api("/api/base", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: baseEditor.value }),
+    });
+    toast(d.message || d.error, d.ok);
+    if (d.ok) { baseOriginal = baseEditor.value; baseDirty.style.display = "none"; }
+  } catch (e) { toast(e.message, false); }
+  btnBaseSave.disabled = false;
+};
+
+/* ---------- 初始化 ---------- */
+refreshStatus();
+setInterval(refreshStatus, 10000);
+
+// 页面打开时自动检测 mihomo 更新
+(async () => {
+  try {
+    const d = await api("/api/upgrade/check");
+    if (d.ok) {
+      $("uCur").textContent = "v" + d.current;
+      $("uLatest").textContent = "v" + d.latest;
+      $("uLevel").textContent = d.level;
+      if (!d.has_update) {
+        const v = $("upVerdict");
+        v.className = "verdict show";
+        $("upBadge").className = "badge on";
+        $("upBadge").textContent = `已是最新版本 v${d.current}`;
+        $("upOut").style.display = "none";
+      }
+    }
+  } catch (e) { /* GitHub 不通就静默 */ }
+})();
+
+refreshBackups();
+refreshSubs();
+loadBase();
+</script>
+</body>
+</html>
