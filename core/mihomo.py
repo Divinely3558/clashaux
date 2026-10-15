@@ -22,13 +22,17 @@ logger = logging.getLogger("clashaux")
 UNIT = "mihomo"
 
 # 内置 metacubexd 面板（打包进可执行文件，检测到 mihomo 后释放到其数据目录）
-EMBEDDED_DASH_TGZ = BUNDLE_DIR / "metacubexd.tgz"
+EMBEDDED_DASH_TGZ = BUNDLE_DIR / "assets" / "metacubexd.tgz"
 
 # 内置开机自启安装脚本（面板自身的 systemd 服务，与 mihomo 安装无关）
 EMBEDDED_SERVICE_SH = BUNDLE_DIR / "install-service.sh"
 
 # 内置 geo 数据（geoip.dat / geosite.dat / country.mmdb，打包进可执行文件，检测到 mihomo 后释放到其数据目录）
-EMBEDDED_GEO = (BUNDLE_DIR / "geoip.dat", BUNDLE_DIR / "geosite.dat", BUNDLE_DIR / "country.mmdb")
+EMBEDDED_GEO = (
+    BUNDLE_DIR / "assets" / "geoip.dat",
+    BUNDLE_DIR / "assets" / "geosite.dat",
+    BUNDLE_DIR / "assets" / "country.mmdb",
+)
 
 
 def _run(args: list[str], timeout: float = 15) -> tuple[int, str]:

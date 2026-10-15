@@ -26,16 +26,10 @@ echo "==> 安装 PyInstaller..."
 echo "==> 清理旧构建..."
 rm -rf build dist clashaux.spec
 
-echo "==> 检查内置面板包..."
-if [ ! -f metacubexd.tgz ]; then
-  echo "错误: 找不到 metacubexd.tgz（内置 metacubexd 面板包），请将其放到项目根目录" >&2
-  exit 1
-fi
-
-echo "==> 检查内置 geo 数据..."
-for f in geoip.dat geosite.dat country.mmdb; do
-  if [ ! -f ".text/$f" ]; then
-    echo "错误: 找不到 .text/$f（内置 geo 数据），请将其放到 .text/ 目录" >&2
+echo "==> 检查内置资源（assets/）..."
+for f in metacubexd.tgz geoip.dat geosite.dat country.mmdb; do
+  if [ ! -f "assets/$f" ]; then
+    echo "错误: 找不到 assets/$f（内置资源），请将其放到 assets/ 目录" >&2
     exit 1
   fi
 done
@@ -44,10 +38,10 @@ echo "==> 打包..."
 "$UV" run pyinstaller --onefile \
   --add-data "static:static" \
   --add-data "base.yaml:." \
-  --add-data "metacubexd.tgz:." \
-  --add-data ".text/geoip.dat:." \
-  --add-data ".text/geosite.dat:." \
-  --add-data ".text/country.mmdb:." \
+  --add-data "assets/metacubexd.tgz:assets" \
+  --add-data "assets/geoip.dat:assets" \
+  --add-data "assets/geosite.dat:assets" \
+  --add-data "assets/country.mmdb:assets" \
   --add-data "install-service.sh:." \
   --name clashaux \
   main.py

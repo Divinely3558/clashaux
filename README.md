@@ -1,6 +1,6 @@
 # clashaux
 
-**当前版本：v26.10.15b**
+**当前版本：v26.10.15c**
 
 mihomo (Clash Meta) 辅助管理面板，提供 Web UI 来管理配置、订阅和服务。
 
@@ -68,7 +68,9 @@ sudo .venv/bin/python main.py
 ./build.sh
 ```
 
-生成的可执行文件在 `dist/clashaux`，metacubexd 面板、base.yaml 与 geo 数据（geoip.dat / geosite.dat）均已内置，单文件即可运行；检测到 mihomo 后自动在其数据目录释放 `metacubexd/` 与 `geoip.dat`/`geosite.dat`，并在程序同目录生成 `base.yaml`。
+生成的可执行文件在 `dist/clashaux`，metacubexd 面板、base.yaml 与 geo 数据（geoip.dat / geosite.dat / country.mmdb）均已内置，单文件即可运行；检测到 mihomo 后自动在其数据目录释放 `metacubexd/` 与 `geoip.dat`/`geosite.dat`/`country.mmdb`，并在程序同目录生成 `base.yaml`。
+
+打包前请确认 `assets/` 目录齐全（`metacubexd.tgz`、`geoip.dat`、`geosite.dat`、`country.mmdb`），缺失时 build.sh 会报错退出。
 
 ## 文件说明
 
@@ -79,8 +81,7 @@ sudo .venv/bin/python main.py
 | `basic.json` | 基础连接设置（external-controller/external-ui/secret/mixed-port），首次运行自动生成 |
 | `base.yaml` | 配置换头的头部模板（不含基础连接设置） |
 | `subscriptions.json` | 已保存的订阅链接 |
-| `metacubexd.tgz` | 内置面板包（打包进可执行文件，释放到 mihomo 数据目录） |
-| `.text/geoip.dat`、`.text/geosite.dat`、`.text/country.mmdb` | 内置 GeoIP/GeoSite/MMDB 数据源（打包进可执行文件，检测到 mihomo 后释放到其数据目录） |
+| `assets/` | 打包内置资源目录：`metacubexd.tgz`（面板包）、`geoip.dat` / `geosite.dat` / `country.mmdb`（GeoIP/GeoSite/MMDB 数据源），build.sh 从此目录读取并打进可执行文件，运行时释放到 mihomo 数据目录 |
 | `install-service.sh` | 面板服务管理脚本（打包进可执行文件，启动时释放到程序目录）：安装/启用/取消开机自启、查看状态日志、卸载面板服务、完全卸载（面板 + mihomo + 数据文件，保留可执行文件）；无参数运行进入交互菜单 |
 | `backups/` | 配置备份（最近 5 份） |
 
@@ -97,6 +98,12 @@ sudo .venv/bin/python main.py
 - PyYAML
 
 ## 更新日志
+
+### v26.10.15c
+
+**变更**
+
+- 打包内置资源集中到 `assets/` 目录（metacubexd.tgz 与 geoip.dat / geosite.dat / country.mmdb 从项目根与 `.text/` 移入），build.sh 从 assets/ 读取，缺失时报错退出；程序按 `BUNDLE_DIR/assets/` 路径读取，打包产物内外的布局保持一致
 
 ### v26.10.15b
 
