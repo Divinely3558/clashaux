@@ -1,6 +1,6 @@
 # clashaux
 
-**当前版本：v26.10.15c**
+**当前版本：v26.10.15d**
 
 mihomo (Clash Meta) 辅助管理面板，提供 Web UI 来管理配置、订阅和服务。
 
@@ -98,6 +98,12 @@ sudo .venv/bin/python main.py
 - PyYAML
 
 ## 更新日志
+
+### v26.10.15d
+
+**变更**
+
+- `.gz` 二进制安装位置与 `.deb` 布局统一（以 deb 为准）：二进制安装到 `/usr/bin/mihomo`，systemd 单元写到 `/usr/lib/systemd/system/mihomo.service`，数据目录仍为 `/etc/mihomo`；卸载脚本同步按此路径清理，并兜底清理旧版安装在 `/etc/systemd/system/` 与 `/usr/local/bin/` 的残留
 
 ### v26.10.15c
 

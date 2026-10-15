@@ -201,9 +201,10 @@ def ensure_service_script() -> dict:
 
 
 # ---------- 上传安装（.deb / .gz，阻断弹窗内使用） ----------
-GZ_BIN_TARGET = Path("/usr/local/bin/mihomo")
+# .gz 安装位置与 .deb 布局一致（以 deb 为准）：二进制 /usr/bin、单元 /usr/lib/systemd/system、数据目录 /etc/mihomo
+GZ_BIN_TARGET = Path("/usr/bin/mihomo")
 GZ_ETC_DIR = Path("/etc/mihomo")
-GZ_UNIT_FILE = Path("/etc/systemd/system/mihomo.service")
+GZ_UNIT_FILE = Path("/usr/lib/systemd/system/mihomo.service")
 
 _GZ_UNIT = """\
 [Unit]
@@ -273,6 +274,7 @@ def install_gz(gz: Path) -> dict:
     if rc != 0 and not GZ_UNIT_FILE.exists():
         try:
             GZ_ETC_DIR.mkdir(parents=True, exist_ok=True)
+            GZ_UNIT_FILE.parent.mkdir(parents=True, exist_ok=True)
             GZ_UNIT_FILE.write_text(
                 _GZ_UNIT.format(bin=GZ_BIN_TARGET, etc=GZ_ETC_DIR))
             _run(["systemctl", "daemon-reload"])

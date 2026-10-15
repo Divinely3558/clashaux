@@ -6,8 +6,8 @@ set -euo pipefail
 
 SERVICE_NAME="clashaux"
 SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
-MIHOMO_SERVICE_FILE="/etc/systemd/system/mihomo.service"
-MIHOMO_BIN_LOCAL="/usr/local/bin/mihomo"
+MIHOMO_SERVICE_FILE="/usr/lib/systemd/system/mihomo.service"
+MIHOMO_BIN="/usr/bin/mihomo"
 MIHOMO_ETC="/etc/mihomo"
 RED='\033[0;31m'; GRN='\033[0;32m'; YLW='\033[1;33m'; NC='\033[0m'
 
@@ -146,8 +146,8 @@ systemctl disable mihomo 2>/dev/null || true
 if dpkg -s mihomo >/dev/null 2>&1; then
     apt-get purge -y mihomo || dpkg -P mihomo || true
 fi
-rm -f ${MIHOMO_BIN_LOCAL}
-rm -f ${MIHOMO_SERVICE_FILE}
+rm -f ${MIHOMO_BIN}
+rm -f ${MIHOMO_SERVICE_FILE} /etc/systemd/system/mihomo.service
 systemctl daemon-reload
 # mihomo 数据目录（config.yaml 若为软链接，只删链接，不删指向的外部文件）
 rm -rf ${MIHOMO_ETC}
@@ -162,7 +162,7 @@ cmd_purge() {
     echo -e "${RED}==> 完全卸载：clashaux 服务 + mihomo + 全部数据文件${NC}"
     echo -e "    将删除："
     echo -e "      - clashaux systemd 服务（${SERVICE_FILE}）"
-    echo -e "      - mihomo（deb 包 purge，或 ${MIHOMO_BIN_LOCAL} + systemd 单元）"
+    echo -e "      - mihomo（deb 包 purge，或 ${MIHOMO_BIN} + systemd 单元）"
     echo -e "      - mihomo 数据目录 ${MIHOMO_ETC}（配置/缓存/metacubexd/geo 数据；"
     echo -e "        config.yaml 软链接指向的外部文件不会删除）"
     echo -e "      - 面板数据（clashaux.json / basic.json / base.yaml / subscriptions.json / backups/）"
