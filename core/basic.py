@@ -11,6 +11,7 @@ from pathlib import Path
 
 import yaml
 
+from core import mihomo
 from core.paths import DATA_DIR
 
 BASIC_FILE = DATA_DIR / "basic.json"
@@ -28,10 +29,10 @@ def random_secret(n: int = 10) -> str:
 
 
 def defaults() -> dict:
-    """默认基础设置（external-ui 指向可执行文件同目录的 metacubexd/）。"""
+    """默认基础设置（external-ui 指向 mihomo 数据目录下的 metacubexd/）。"""
     return {
         "external-controller": "0.0.0.0:9090",
-        "external-ui": str(DATA_DIR / "metacubexd"),
+        "external-ui": str(mihomo.dashboard_dir()),
         "secret": random_secret(),
         "mixed-port": 7890,
     }

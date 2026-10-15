@@ -1,4 +1,3 @@
-# external-ui: /etc/mihomo/clash-dashboard
 allow-lan: true
 mode: rule
 unified-delay: true

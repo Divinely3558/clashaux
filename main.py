@@ -2,16 +2,18 @@
 import json
 import logging
 import secrets
+import tempfile
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, Request, UploadFile
+from fastapi import FastAPI, Form, HTTPException, Request, UploadFile
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from core import basic as basicm
 from core import config as cfg
+from core import mihomo
 from core import service as svc
 from core import subscription as subm
 from core.config import ConfigError
@@ -63,21 +65,8 @@ class SubBody(BaseModel):
     proxy: bool = False
 
 
-class ProxyBody(BaseModel):
-    proxy: bool = False
-
-
 class TextBody(BaseModel):
     text: str = ""
-
-
-class TokenBody(BaseModel):
-    token: str = ""
-
-
-class UpgradeBody(BaseModel):
-    proxy: bool = False
-    level: str = ""  # v1/v2/v3，空 = 按系统推荐档位
 
 
 class BasicBody(BaseModel):
@@ -89,12 +78,29 @@ class BasicBody(BaseModel):
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    """启动时：释放内置 metacubexd 面板与 install-service.sh；剥离 base.yaml 基础设置键。"""
-    from core import upgrade as up
-    r = up.ensure_dashboard()
-    if not r.get("ok"):
-        logger.warning("内置面板释放失败: %s", r.get("error"))
-    r = up.ensure_service_script()
+    """启动时：检测 mihomo 并释放内置面板；释放 install-service.sh；剥离 base.yaml 基础设置键。"""
+    d = mihomo.detect()
+    if d["installed"]:
+        logger.info("检测到 mihomo v%s（%s，数据目录 %s）",
+                    d["version"], d["bin"], d["home"])
+        r = mihomo.ensure_dashboard()
+        if not r.get("ok"):
+            logger.warning("内置面板释放失败: %s", r.get("error"))
+        r = mihomo.ensure_geo_files()
+        if not r.get("ok"):
+            logger.warning("内置 geo 数据释放失败: %s", r.get("error"))
+        elif r.get("released"):
+            logger.info("已释放 geo 数据到 %s: %s", r["dir"], "、".join(r["released"]))
+        # 生效配置缺失时自动生成一份最小配置（基础设置 + base.yaml）
+        try:
+            r = cfg.ensure_live_config()
+            if r.get("created"):
+                logger.info("未找到生效配置，已自动生成: %s", r["path"])
+        except OSError as e:
+            logger.warning("自动生成生效配置失败: %s", e)
+    else:
+        logger.warning("未检测到 mihomo，用户自行安装后面板功能才可用")
+    r = mihomo.ensure_service_script()
     if not r.get("ok"):
         logger.warning("install-service.sh 释放失败: %s", r.get("error"))
     try:
@@ -109,11 +115,13 @@ app = FastAPI(title="clashaux", docs_url=None, redoc_url=None, lifespan=lifespan
 
 
 async def _check_auth(request: Request):
-    """验证 token，静态文件和登录接口除外。"""
-    if request.url.path in ("/", "/login", "/api/login", "/style.css") or request.url.path.startswith("/static"):
+    """验证 token，静态文件、登录与 mihomo 检测/上传安装接口除外。"""
+    if request.url.path in ("/", "/login", "/api/login", "/api/mihomo/detect",
+                            "/api/mihomo/upload-install",
+                            "/style.css") or request.url.path.startswith("/static"):
         return None
     # SSE 端点通过 query param 传 token（EventSource 不支持自定义 Header）
-    if request.url.path in ("/api/install/stream", "/api/logs/stream"):
+    if request.url.path == "/api/logs/stream":
         token = request.query_params.get("token", "")
         if token != TOKEN:
             return JSONResponse({"error": "未授权"}, status_code=401)
@@ -134,10 +142,54 @@ async def auth_middleware(request: Request, call_next):
 
 @app.post("/api/login")
 def api_login(body: TextBody):
-    """验证 token。"""
+    """验证 token；未安装 mihomo 时禁止登录。"""
+    d = mihomo.detect()
+    if not d["installed"]:
+        return {"ok": False, "blocked": True,
+                "error": "你未安装 mihomo，请先自行安装后再登录",
+                "level": d["level"]}
     if body.text == TOKEN:
         return {"ok": True, "token": TOKEN}
     return {"ok": False, "error": "token 错误"}
+
+
+@app.get("/api/mihomo/detect")
+def api_mihomo_detect():
+    """mihomo 安装检测（登录前可用）。
+
+    用户自行安装完成后点击「重新检测」：检测通过即释放内置 metacubexd 面板。
+    """
+    d = mihomo.detect()
+    if d["installed"]:
+        d["dashboard"] = mihomo.ensure_dashboard()
+        d["geo"] = mihomo.ensure_geo_files()
+    return d
+
+
+@app.post("/api/mihomo/upload-install")
+async def api_mihomo_upload_install(file: UploadFile, token: str = Form("")):
+    """上传 .deb / .gz 安装 mihomo（阻断弹窗内使用，表单 token 校验）。"""
+    if token != TOKEN:
+        return {"ok": False, "error": "token 错误"}
+    name = file.filename or ""
+    if not name.lower().endswith((".deb", ".gz")):
+        return {"ok": False, "error": "仅支持 .deb 或 .gz 安装包"}
+    data = await file.read()
+    if not data:
+        return {"ok": False, "error": "上传文件为空"}
+    with tempfile.NamedTemporaryFile(suffix=Path(name).suffix, delete=False) as tf:
+        tf.write(data)
+        tmp = Path(tf.name)
+    try:
+        r = mihomo.install_from_upload(tmp)
+    finally:
+        tmp.unlink(missing_ok=True)
+    if r.get("ok"):
+        d = mihomo.detect()
+        r["installed"] = d["installed"]
+        r["dashboard"] = mihomo.ensure_dashboard()
+        r["geo"] = mihomo.ensure_geo_files()
+    return r
 
 
 @app.get("/api/token")
@@ -170,7 +222,7 @@ def _apply_text(text: str) -> dict:
     if not ok:
         result.update(ok=False, stage="reload", error=f"配置已写入但重载失败: {msg}")
         return result
-    result["message"] = "配置已生效"
+    result["message"] = "配置已生效（此前无生效配置，已自动生成）" if result.get("created") else "配置已生效"
     return result
 
 
@@ -184,41 +236,21 @@ async def _read_upload(file: UploadFile) -> str:
 
 @app.get("/api/status")
 def api_status():
-    from core import upgrade as upg
+    d = mihomo.detect()
     return {
         "service": svc.get_status(),
-        "config": cfg.live_info(),
-        "mihomo_version": upg.current_version(),
-        "mihomo_installed": upg.is_installed(),
+        "config": cfg.live_info(auto_create=d["installed"]),
+        "mihomo_version": d["version"],
+        "mihomo_installed": d["installed"],
+        "mihomo_home": d["home"],
+        "mihomo_bin": d["bin"],
     }
-
-
-@app.post("/api/mihomo/install")
-def api_mihomo_install(body: ProxyBody):
-    from core import upgrade as up
-    try:
-        return up.install(body.proxy)
-    except up.UpgradeError as e:
-        return {"ok": False, "error": str(e)}
-
-
-@app.post("/api/mihomo/uninstall")
-def api_mihomo_uninstall(body: TokenBody):
-    """卸载 mihomo（需输入面板 token 二次确认）。"""
-    if body.token != TOKEN:
-        return {"ok": False, "error": "token 错误"}
-    from core import upgrade as up
-    return up.uninstall()
 
 
 @app.post("/api/dashboard/install")
 def api_dashboard_install():
-    """重新释放内置 metacubexd 面板（覆盖现有目录）。"""
-    from core import upgrade as up
-    try:
-        return up.redeploy_dashboard()
-    except up.UpgradeError as e:
-        return {"ok": False, "error": str(e)}
+    """重新释放内置 metacubexd 面板到 mihomo 数据目录（覆盖现有目录）。"""
+    return mihomo.redeploy_dashboard()
 
 
 @app.get("/api/basic")
@@ -247,34 +279,15 @@ def api_basic_save(body: BasicBody):
         return result
     basicm.save(basics)
     basicm.strip_base_file(cfg.BASE_FILE)
-    if result.get("written"):
-        rok, rmsg = svc.service_action("reload")
-        if not rok:
-            result["ok"] = False
-            result["error"] = f"配置已写入但重载失败: {rmsg}"
-            return result
-        result["message"] = "基础设置已保存并写入配置最头部，mihomo 已重载"
-    else:
-        result["message"] = "基础设置已保存，下次换头/安装时生效"
+    rok, rmsg = svc.service_action("reload")
+    if not rok:
+        result["ok"] = False
+        result["error"] = f"配置已写入但重载失败: {rmsg}"
+        return result
+    result["message"] = ("生效配置不存在，已按基础设置自动生成并写入，mihomo 已重载"
+                         if result.get("created")
+                         else "基础设置已保存并写入配置最头部，mihomo 已重载")
     return result
-
-
-@app.get("/api/install/stream")
-def api_install_stream(proxy: bool = False, token: str = ""):
-    """SSE 流式返回安装进度（token 通过 query 传递，EventSource 不支持自定义 Header）。"""
-    if token != TOKEN:
-        return JSONResponse({"error": "未授权"}, status_code=401)
-    from core import upgrade as up
-
-    def gen():
-        for event in up.install_stream(use_proxy=proxy):
-            yield f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
-
-    return StreamingResponse(
-        gen(),
-        media_type="text/event-stream",
-        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
-    )
 
 
 @app.post("/api/service/{action}")
@@ -290,7 +303,9 @@ def api_logs(n: int = 200):
 
 @app.get("/api/config/current")
 def api_config_current():
-    """读取 mihomo 当前运行的完整配置。"""
+    """读取 mihomo 当前运行的完整配置（缺失时自动生成一份最小配置）。"""
+    if not cfg.live_link().exists():
+        cfg.ensure_live_config()
     try:
         path = cfg.live_file()
         text = path.read_text(encoding="utf-8")
@@ -368,8 +383,31 @@ def api_base_get():
 def api_base_save(body: TextBody):
     if not body.text.strip():
         return {"ok": False, "error": "base.yaml 内容不能为空"}
-    cfg.BASE_FILE.write_text(body.text.rstrip("\n") + "\n", encoding="utf-8")
+    # 基础连接设置由「基础设置」卡片管理，粘贴整份配置时自动剥离，避免写回模板造成重复
+    text = basicm.strip_keys(body.text).strip("\n")
+    if not text:
+        return {"ok": False, "error": "base.yaml 内容不能只有基础连接设置"}
+    cfg.BASE_FILE.write_text(text + "\n", encoding="utf-8")
     return {"ok": True, "message": "base.yaml 已保存，下次换头时生效"}
+
+
+@app.post("/api/base/apply")
+def api_base_apply():
+    """把当前 base.yaml 模板套用到生效配置（保留正文，只换头部）并重载 mihomo。"""
+    try:
+        result = cfg.apply_base_template()
+    except ConfigError as e:
+        return {"ok": False, "stage": "apply", "error": str(e)}
+    if not result["ok"]:
+        return result
+    rok, rmsg = svc.service_action("reload")
+    if not rok:
+        result.update(ok=False, stage="reload", error=f"配置已写入但重载失败: {rmsg}")
+        return result
+    result["message"] = ("生效配置不存在，已按 base.yaml 生成并写入，mihomo 已重载"
+                         if result.get("created")
+                         else "base.yaml 模板已套用到生效配置（正文保留），mihomo 已重载")
+    return result
 
 
 @app.get("/api/subs")
@@ -416,38 +454,34 @@ def api_sub_apply(body: SubBody):
     return _apply_text(text)
 
 
-@app.get("/api/upgrade/check")
-def api_upgrade_check(proxy: bool = False):
-    from core import upgrade as up
-    try:
-        return up.check(proxy)
-    except up.UpgradeError as e:
-        return {"ok": False, "error": str(e)}
-
-
-@app.post("/api/upgrade/apply")
-def api_upgrade_apply(body: UpgradeBody):
-    from core import upgrade as up
-    try:
-        return up.apply(body.proxy, body.level.strip())
-    except up.UpgradeError as e:
-        return {"ok": False, "error": str(e)}
-
-
-@app.post("/api/upgrade/upload")
-def api_upgrade_upload(file: UploadFile):
-    """上传 .gz / .deb 安装包安装 mihomo（GitHub 不可用时的手动通道）。"""
-    from core import upgrade as up
-    try:
-        return up.install_from_upload(file)
-    except up.UpgradeError as e:
-        return {"ok": False, "error": str(e)}
-
-
 app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")
+
+
+def _lan_ip() -> str:
+    """取本机局域网 IP（用于展示局域网访问地址，失败返回空串）。"""
+    import socket
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+            s.connect(("223.5.5.5", 53))
+            return s.getsockname()[0]
+    except OSError:
+        return ""
+
+
+def _startup_banner() -> None:
+    print("=" * 56)
+    print("  clashaux · mihomo 辅助面板")
+    print(f"  本机访问:   http://127.0.0.1:{PORT}")
+    lan = _lan_ip()
+    if lan:
+        print(f"  局域网访问: http://{lan}:{PORT}")
+    print(f"  登录 Token: {TOKEN}")
+    print(f"  （Token 也保存在 {CONFIG_FILE}）")
+    print("=" * 56, flush=True)
 
 
 if __name__ == "__main__":
     import uvicorn
 
+    _startup_banner()
     uvicorn.run(app, host=HOST, port=PORT, log_level="warning")

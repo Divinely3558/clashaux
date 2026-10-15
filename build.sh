@@ -32,11 +32,22 @@ if [ ! -f metacubexd.tgz ]; then
   exit 1
 fi
 
+echo "==> 检查内置 geo 数据..."
+for f in geoip.dat geosite.dat country.mmdb; do
+  if [ ! -f ".text/$f" ]; then
+    echo "错误: 找不到 .text/$f（内置 geo 数据），请将其放到 .text/ 目录" >&2
+    exit 1
+  fi
+done
+
 echo "==> 打包..."
 "$UV" run pyinstaller --onefile \
   --add-data "static:static" \
   --add-data "base.yaml:." \
   --add-data "metacubexd.tgz:." \
+  --add-data ".text/geoip.dat:." \
+  --add-data ".text/geosite.dat:." \
+  --add-data ".text/country.mmdb:." \
   --add-data "install-service.sh:." \
   --name clashaux \
   main.py
