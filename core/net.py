@@ -8,7 +8,6 @@ use_proxy=True 时仅走本机代理（尊重用户显式选择）。
 """
 import logging
 import time
-from pathlib import Path
 from urllib.parse import urlsplit, urlunsplit
 
 import httpx
@@ -132,44 +131,3 @@ def http_get(
             # 服务端有响应，不换线路重试
             raise NetError(f"{p['label']} 返回 {e.response.status_code}") from e
     raise NetError("；".join(errors) or "未知网络错误")
-
-
-def stream_download(
-    url: str,
-    dest: Path,
-    *,
-    use_proxy: bool = False,
-    max_retries: int = 3,
-    connect: float = 30,
-    read_timeout: float = 600,
-    headers: dict | None = None,
-) -> Path:
-    """流式下载到 dest，按线路回退 + 整体重试。失败抛 NetError。"""
-    errors: list[str] = []
-    for attempt in range(1, max_retries + 1):
-        for p in _plan(url, use_proxy, proxy_fallback=True):
-            try:
-                with _client(p["proxy"], headers) as client:
-                    extensions = {"sni_hostname": p["sni"]} if p["sni"] else {}
-                    with client.stream(
-                        "GET", p["url"],
-                        timeout=httpx.Timeout(read_timeout, connect=connect),
-                        extensions=extensions,
-                    ) as resp:
-                        resp.raise_for_status()
-                        dest.parent.mkdir(parents=True, exist_ok=True)
-                        with open(dest, "wb") as f:
-                            for chunk in resp.iter_bytes(65536):
-                                f.write(chunk)
-                if p["label"] != "直连":
-                    logger.info("下载 %s 成功（经 %s）", url, p["label"])
-                return dest
-            except httpx.TransportError as e:
-                errors.append(f"{p['label']}: {_short(e)}")
-                logger.warning("下载 %s 经 %s 失败: %s", url, p["label"], _short(e))
-            except httpx.HTTPStatusError as e:
-                errors.append(f"{p['label']}: HTTP {e.response.status_code}")
-                logger.warning("下载 %s 经 %s 返回 %s", url, p["label"], e.response.status_code)
-        if attempt < max_retries:
-            time.sleep(2 * attempt)
-    raise NetError(f"下载失败（重试 {max_retries} 次）: " + "；".join(errors[-3:]))

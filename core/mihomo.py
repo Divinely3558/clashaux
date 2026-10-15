@@ -10,16 +10,15 @@ import os
 import re
 import shlex
 import shutil
-import subprocess
 import tarfile
 import tempfile
+import time
 from pathlib import Path
 
-from core.paths import BUNDLE_DIR, DATA_DIR
+from core.paths import BUNDLE_DIR, DATA_DIR, MIHOMO_UNIT as UNIT
+from core.utils import run_cmd
 
 logger = logging.getLogger("clashaux")
-
-UNIT = "mihomo"
 
 # 内置 metacubexd 面板（打包进可执行文件，检测到 mihomo 后释放到其数据目录）
 EMBEDDED_DASH_TGZ = BUNDLE_DIR / "assets" / "metacubexd.tgz"
@@ -35,17 +34,9 @@ EMBEDDED_GEO = (
 )
 
 
-def _run(args: list[str], timeout: float = 15) -> tuple[int, str]:
-    try:
-        p = subprocess.run(args, capture_output=True, text=True, timeout=timeout)
-    except (OSError, subprocess.TimeoutExpired):
-        return 1, ""
-    return p.returncode, ((p.stdout or "") + (p.stderr or "")).strip()
-
-
 def _systemd_argv() -> list[str] | None:
     """从 systemctl show 解析 mihomo 服务的 ExecStart argv（未安装服务返回 None）。"""
-    _, out = _run(["systemctl", "show", UNIT, "-p", "ExecStart", "--no-pager"])
+    _, out = run_cmd(["systemctl", "show", UNIT, "-p", "ExecStart", "--no-pager"], silent=True)
     m = re.search(r"argv\[\]=(.*?)\s*;", out)
     if not m:
         return None
@@ -93,23 +84,33 @@ def _version(bin_path: str) -> str:
     """从 mihomo -v 解析版本号，如 1.19.32。"""
     if not bin_path:
         return ""
-    _, out = _run([bin_path, "-v"], timeout=10)
+    _, out = run_cmd([bin_path, "-v"], timeout=10, silent=True)
     m = re.search(r"[vV](\d+(?:\.\d+)+)", out)
     return m.group(1) if m else ""
 
 
+_detect_cache: tuple[float, dict] | None = None
+_DETECT_TTL = 10.0
+
+
 def detect() -> dict:
-    """检测当前 mihomo 安装状态。"""
+    """检测当前 mihomo 安装状态（结果缓存 10 秒）。"""
+    global _detect_cache
+    now = time.monotonic()
+    if _detect_cache and now - _detect_cache[0] < _DETECT_TTL:
+        return _detect_cache[1]
     bin_path = detect_bin()
     ver = _version(bin_path)
     installed = bool(bin_path) and bool(ver)
-    return {
+    result = {
         "installed": installed,
         "version": ver,
         "bin": bin_path,
         "home": str(home()),
         "level": goamd64_level(),
     }
+    _detect_cache = (now, result)
+    return result
 
 
 def goamd64_level() -> str:
@@ -229,10 +230,10 @@ WantedBy=multi-user.target
 
 def install_deb(deb: Path) -> dict:
     """dpkg 安装 .deb 包；缺依赖时 apt-get -f 修复后重试一次。"""
-    rc, out = _run(["dpkg", "-i", str(deb)], timeout=300)
+    rc, out = run_cmd(["dpkg", "-i", str(deb)], timeout=300, silent=True)
     if rc != 0:
-        _run(["apt-get", "install", "-y", "-f"], timeout=600)
-        rc, out = _run(["dpkg", "-i", str(deb)], timeout=300)
+        run_cmd(["apt-get", "install", "-y", "-f"], timeout=600, silent=True)
+        rc, out = run_cmd(["dpkg", "-i", str(deb)], timeout=300, silent=True)
     if rc != 0:
         tail = out.strip()[-600:]
         return {"ok": False, "error": "dpkg 安装失败" + (f": {tail}" if tail else "")}
@@ -271,15 +272,15 @@ def install_gz(gz: Path) -> dict:
         if tmp is not None:
             tmp.unlink(missing_ok=True)
     # deb 安装自带服务单元，通常不会走到这里
-    rc, _ = _run(["systemctl", "cat", "mihomo.service", "--no-pager"])
+    rc, _ = run_cmd(["systemctl", "cat", "mihomo.service", "--no-pager"], silent=True)
     if rc != 0 and not GZ_UNIT_FILE.exists():
         try:
             GZ_ETC_DIR.mkdir(parents=True, exist_ok=True)
             GZ_UNIT_FILE.parent.mkdir(parents=True, exist_ok=True)
             GZ_UNIT_FILE.write_text(
                 _GZ_UNIT.format(bin=GZ_BIN_TARGET, etc=GZ_ETC_DIR))
-            _run(["systemctl", "daemon-reload"])
-            _run(["systemctl", "enable", "mihomo.service"])
+            run_cmd(["systemctl", "daemon-reload"], silent=True)
+            run_cmd(["systemctl", "enable", "mihomo.service"], silent=True)
         except OSError as e:
             return {"ok": False, "error": f"写入 systemd 单元失败: {e}"}
     return {"ok": True, "message": f"mihomo v{ver} 安装成功（{GZ_BIN_TARGET}）",

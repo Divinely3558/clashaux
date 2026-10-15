@@ -6,7 +6,6 @@
 import os
 import re
 import shutil
-import subprocess
 import tempfile
 from datetime import datetime
 from pathlib import Path
@@ -16,6 +15,7 @@ import yaml
 from core import basic as basicm
 from core import mihomo
 from core.paths import BUNDLE_DIR, DATA_DIR
+from core.utils import run_cmd
 
 BASE_FILE = DATA_DIR / "base.yaml"
 BACKUP_DIR = DATA_DIR / "backups"
@@ -38,12 +38,6 @@ BODY_KEYS = ("proxies", "proxy-groups", "proxy-providers", "rule-providers", "ru
 
 class ConfigError(Exception):
     """配置处理失败。"""
-
-
-def _run(args: list[str], timeout: float = 120) -> tuple[int, str]:
-    p = subprocess.run(args, capture_output=True, text=True, timeout=timeout)
-    out = ((p.stdout or "") + (p.stderr or "")).strip()
-    return p.returncode, out
 
 
 def live_file() -> Path:
@@ -221,7 +215,7 @@ def validate(text: str) -> tuple[bool, str]:
         with os.fdopen(fd, "w", encoding="utf-8") as f:
             f.write(text)
         bin_path = mihomo.detect_bin() or "mihomo"
-        rc, out = _run([bin_path, "-t", "-d", str(mihomo.home()), "-f", tmp], timeout=120)
+        rc, out = run_cmd([bin_path, "-t", "-d", str(mihomo.home()), "-f", tmp], timeout=120)
     finally:
         os.unlink(tmp)
     tail = "\n".join(out.splitlines()[-30:])
@@ -231,13 +225,16 @@ def validate(text: str) -> tuple[bool, str]:
 def stats(text: str) -> dict:
     """统计候选配置内容。"""
     data = yaml.safe_load(text) or {}
-    count = lambda k: len(data.get(k) or [])  # noqa: E731
+
+    def _count(k: str) -> int:
+        return len(data.get(k) or [])
+
     return {
-        "proxies": count("proxies"),
-        "groups": count("proxy-groups"),
-        "providers": count("proxy-providers"),
-        "rules": count("rules"),
-        "rule_providers": count("rule-providers"),
+        "proxies": _count("proxies"),
+        "groups": _count("proxy-groups"),
+        "providers": _count("proxy-providers"),
+        "rules": _count("rules"),
+        "rule_providers": _count("rule-providers"),
     }
 
 
@@ -264,7 +261,7 @@ def live_info(auto_create: bool = False) -> dict:
     info["size"] = st.st_size
     try:
         info.update(stats(path.read_text(encoding="utf-8")))
-    except Exception:
+    except (yaml.YAMLError, OSError):
         pass
     return info
 

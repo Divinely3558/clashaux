@@ -21,5 +21,6 @@ def _resolve() -> tuple[Path, Path]:
 BUNDLE_DIR, DATA_DIR = _resolve()
 
 # mihomo 由用户自行安装，二进制位置与数据目录（-d）在 core/mihomo.py 中动态检测
+MIHOMO_UNIT = "mihomo"
 
 LOCAL_PROXY = "http://127.0.0.1:7890"

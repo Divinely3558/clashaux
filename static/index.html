@@ -217,6 +217,13 @@ const $ = id => document.getElementById(id);
 const fmtSize = n => n > 1048576 ? (n / 1048576).toFixed(1) + " MB" : (n / 1024).toFixed(1) + " KB";
 const fmtTime = ts => new Date(ts * 1000).toLocaleString("zh-CN", { hour12: false });
 function esc(s) { const d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+function renderStats(s) {
+  return `<div class="stat"><b>${s.proxies}</b><span>节点</span></div>` +
+    `<div class="stat"><b>${s.groups}</b><span>策略组</span></div>` +
+    `<div class="stat"><b>${s.providers}</b><span>节点订阅</span></div>` +
+    `<div class="stat"><b>${s.rules}</b><span>规则</span></div>` +
+    `<div class="stat"><b>${s.rule_providers}</b><span>规则集</span></div>`;
+}
 
 let authToken = localStorage.getItem("clashaux_token") || "";
 
@@ -397,10 +404,16 @@ let es = null;
 function nearBottom() {
   return logBox.scrollHeight - logBox.scrollTop - logBox.clientHeight < 60;
 }
+const MAX_LOG_LINES = 2000;
 function appendLog(line) {
   const stick = nearBottom();
   if (logBox.textContent === "暂无日志") logBox.textContent = "";
   logBox.textContent += line + "\n";
+  // 限制日志行数，防止内存泄漏
+  const lines = logBox.textContent.split("\n");
+  if (lines.length > MAX_LOG_LINES) {
+    logBox.textContent = lines.slice(-MAX_LOG_LINES).join("\n");
+  }
   if (stick) logBox.scrollTop = logBox.scrollHeight;
 }
 $("btnLogs").onclick = async () => {
@@ -501,13 +514,7 @@ async function cfgPreview() {
       btnApply.disabled = true;
     }
     if (d.stats) {
-      const s = d.stats;
-      $("vStats").innerHTML =
-        `<div class="stat"><b>${s.proxies}</b><span>节点</span></div>` +
-        `<div class="stat"><b>${s.groups}</b><span>策略组</span></div>` +
-        `<div class="stat"><b>${s.providers}</b><span>节点订阅</span></div>` +
-        `<div class="stat"><b>${s.rules}</b><span>规则</span></div>` +
-        `<div class="stat"><b>${s.rule_providers}</b><span>规则集</span></div>`;
+      $("vStats").innerHTML = renderStats(d.stats);
     }
   } catch (e) { toast(e.message, false); }
   btnPreview.disabled = !cfgHasContent();
@@ -595,13 +602,7 @@ function renderVerdict(badgeEl, statsEl, outEl, d) {
     outEl.textContent = (d.error || "") + (d.output ? "\n" + d.output : "");
   }
   if (d.stats) {
-    const s = d.stats;
-    statsEl.innerHTML =
-      `<div class="stat"><b>${s.proxies}</b><span>节点</span></div>` +
-      `<div class="stat"><b>${s.groups}</b><span>策略组</span></div>` +
-      `<div class="stat"><b>${s.providers}</b><span>节点订阅</span></div>` +
-      `<div class="stat"><b>${s.rules}</b><span>规则</span></div>` +
-      `<div class="stat"><b>${s.rule_providers}</b><span>规则集</span></div>`;
+    statsEl.innerHTML = renderStats(d.stats);
   }
 }
 
@@ -854,6 +855,7 @@ btnBlockUpload.onclick = async () => {
 /* ---------- metacubexd 面板释放 ---------- */
 const btnDashInstall = $("btnDashInstall"), dashStatus = $("dashStatus");
 btnDashInstall.onclick = async () => {
+  if (!authToken) { showLoginModal(); return; }
   if (!confirm("确认重新释放内置 metacubexd 面板？\n将覆盖 mihomo 数据目录 metacubexd/ 下的文件。")) return;
   btnDashInstall.disabled = true;
   dashStatus.textContent = "";
@@ -884,6 +886,9 @@ async function loadBase() {
   } catch (e) { toast(e.message, false); }
 }
 baseEditor.oninput = () => { baseDirty.style.display = baseEditor.value !== baseOriginal ? "inline" : "none"; };
+window.addEventListener("beforeunload", e => {
+  if (baseEditor.value !== baseOriginal) { e.preventDefault(); e.returnValue = ""; }
+});
 btnBaseReload.onclick = () => {
   if (baseEditor.value !== baseOriginal && !confirm("当前编辑未保存，确定重新加载覆盖？")) return;
   loadBase();
@@ -931,7 +936,11 @@ async function afterAuth() {
     showLoginModal();
     return;
   }
-  setInterval(refreshStatus, 15000);
+  const statusTimer = setInterval(refreshStatus, 15000);
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) { clearInterval(statusTimer); }
+    else { setInterval(refreshStatus, 15000); }
+  });
   refreshBackups();
   refreshSubs();
   loadBase();
@@ -956,7 +965,6 @@ async function afterAuth() {
   }
   await afterAuth();
 })();
-loadBasic();
 </script>
 </body>
 </html>

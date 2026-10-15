@@ -4,7 +4,9 @@ import subprocess
 import time
 from typing import Iterator
 
-UNIT = "mihomo"
+from core.utils import run_cmd
+
+from core.paths import MIHOMO_UNIT as UNIT
 _PROPS = (
     "ActiveState",
     "SubState",
@@ -14,16 +16,6 @@ _PROPS = (
     "MemoryCurrent",
 )
 _ACTIONS = ("enable", "start", "stop", "restart", "reload")
-
-
-def _run(args: list[str], timeout: float = 30) -> tuple[int, str]:
-    """执行命令，返回 (返回码, 合并输出)。"""
-    try:
-        p = subprocess.run(args, capture_output=True, text=True, timeout=timeout)
-    except subprocess.TimeoutExpired:
-        return 124, "命令执行超时"
-    out = ((p.stdout or "") + (p.stderr or "")).strip()
-    return p.returncode, out
 
 
 def require_root() -> str | None:
@@ -37,7 +29,7 @@ def get_status() -> dict:
     """读取 mihomo 服务状态（只读，无需 root）。"""
     args = ["systemctl", "show", UNIT, "--no-pager"]
     args += [f"--property={p}" for p in _PROPS]
-    _, out = _run(args)
+    _, out = run_cmd(args)
     data: dict[str, str] = {}
     for line in out.splitlines():
         k, _, v = line.partition("=")
@@ -60,15 +52,15 @@ def service_action(action: str) -> tuple[bool, str]:
         return False, f"不支持的操作: {action}"
     if err := require_root():
         return False, err
-    rc, out = _run(["systemctl", action, UNIT])
+    rc, out = run_cmd(["systemctl", action, UNIT])
     # reload 失败时（单元无 ExecReload）降级为 restart
     if action == "reload" and rc != 0 and "not applicable" in out:
-        rc, out = _run(["systemctl", "restart", UNIT])
+        rc, out = run_cmd(["systemctl", "restart", UNIT])
     ok = rc == 0
     # start/reload/restart 后短暂探活
     if ok and action in ("start", "restart", "reload"):
         time.sleep(1.0)
-        _, state = _run(["systemctl", "is-active", UNIT])
+        _, state = run_cmd(["systemctl", "is-active", UNIT])
         if state != "active":
             ok = False
             out = out or f"操作后服务状态: {state}"
@@ -78,7 +70,7 @@ def service_action(action: str) -> tuple[bool, str]:
 def journal_tail(n: int) -> list[str]:
     """最近 n 行服务日志。"""
     n = max(1, min(n, 2000))
-    _, out = _run(
+    _, out = run_cmd(
         ["journalctl", "-u", UNIT, "-o", "cat", "-n", str(n), "--no-pager"],
         timeout=15,
     )

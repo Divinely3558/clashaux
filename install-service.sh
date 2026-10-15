@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # clashaux 服务管理脚本
-# 用法: ./install-service.sh [install|enable|disable|status|logs|uninstall|purge] [可执行文件路径]
+# 用法: ./install-service.sh [install|start|stop|restart|status|logs|uninstall|purge] [可执行文件路径]
 # 无参数运行时进入交互菜单
 set -euo pipefail
 
@@ -25,16 +25,27 @@ if [[ -z "$EXE" ]]; then
 fi
 EXE="$(cd "$(dirname "$EXE")" && pwd)/$(basename "$EXE")"
 if [[ ! -f "$EXE" ]]; then
-    echo -e "${RED}文件不存在：$EXE${NC}" >&2
+    echo -e "${RED}文件不存在：${EXE}${NC}" >&2
     exit 1
 fi
 chmod +x "$EXE" 2>/dev/null || true
 EXE_DIR="$(dirname "$EXE")"
 
-# ---------- 2. 判断 sudo 可用性 ----------
+# ---------- 2. sudo 辅助 ----------
 can_sudo() { sudo -n true 2>/dev/null; }
 
-# ---------- 3. 生成 service 内容到临时文件 ----------
+# 需要 root 的操作：有免密 sudo 则直接执行，否则打印命令供用户手动复制
+run_privileged() {
+    local desc="$1"; shift
+    if can_sudo; then
+        sudo "$@"
+    else
+        echo -e "${YLW}当前会话无免密 root，请手动执行：${NC}"
+        echo "sudo $*"
+    fi
+}
+
+# ---------- 3. 生成 service 内容 ----------
 _tmp_file() { mktemp "/tmp/${SERVICE_NAME}.service.XXXXXX"; }
 
 service_content() {
@@ -71,7 +82,7 @@ cmd_install() {
         echo -e "    状态:  ${YLW}systemctl status ${SERVICE_NAME}${NC}"
         echo -e "    日志:  ${YLW}journalctl -u ${SERVICE_NAME} -f${NC}"
     else
-        echo -e "${YLW}当前会话无免密 root，请复制以下命令到终端执行：${NC}"
+        echo -e "${YLW}请复制以下命令到终端执行：${NC}"
         echo "--- 开始复制 ---"
         echo "sudo tee ${SERVICE_FILE} << EOF"
         cat "$tmp"
@@ -83,40 +94,18 @@ cmd_install() {
     fi
 }
 
-cmd_enable() {
-    echo -e "${GRN}==> 设为开机自启并立即启动${NC}"
-    if can_sudo; then
-        sudo systemctl enable --now "${SERVICE_NAME}"
-        echo -e "${GRN}✓ 已启用${NC}"
-    else
-        echo -e "${YLW}请执行：${NC}"
-        echo "sudo systemctl enable --now ${SERVICE_NAME}"
-    fi
-}
+cmd_start()   { run_privileged "启动服务" systemctl start  "${SERVICE_NAME}"; }
+cmd_stop()    { run_privileged "停止服务" systemctl stop   "${SERVICE_NAME}"; }
+cmd_restart() { run_privileged "重启服务" systemctl restart "${SERVICE_NAME}"; }
 
-cmd_disable() {
-    echo -e "${YLW}==> 取消开机自启（服务继续运行，重启后不再自启）${NC}"
-    if can_sudo; then
-        sudo systemctl disable "${SERVICE_NAME}" 2>/dev/null || true
-        echo -e "${GRN}✓ 已取消开机自启${NC}"
-    else
-        echo -e "${YLW}请执行：${NC}"
-        echo "sudo systemctl disable ${SERVICE_NAME}"
-    fi
-}
+cmd_status() { systemctl status "${SERVICE_NAME}" --no-pager || true; }
 
-cmd_status() {
-    systemctl status "${SERVICE_NAME}" --no-pager || true
-}
-
-cmd_logs() {
-    journalctl -u "${SERVICE_NAME}" -n 200 --no-pager
-}
+cmd_logs() { journalctl -u "${SERVICE_NAME}" -n 200 --no-pager; }
 
 cmd_uninstall() {
     echo -e "${YLW}==> 卸载 clashaux 服务（保留可执行文件、数据与 mihomo）${NC}"
     if can_sudo; then
-        sudo systemctl stop "${SERVICE_NAME}" 2>/dev/null || true
+        sudo systemctl stop    "${SERVICE_NAME}" 2>/dev/null || true
         sudo systemctl disable "${SERVICE_NAME}" 2>/dev/null || true
         sudo rm -f "${SERVICE_FILE}"
         sudo systemctl daemon-reload
@@ -130,7 +119,7 @@ cmd_uninstall() {
     fi
 }
 
-# 完全卸载的 root 操作集中到一个临时脚本，sudo 执行或直接打印
+# 完全卸载的 root 操作集中到一个临时脚本
 purge_script() {
     local path="$1"
     cat > "$path" <<EOF
@@ -195,22 +184,24 @@ cmd_menu() {
         echo
         echo -e "${GRN}==> clashaux 服务管理${NC}（可执行文件: ${YLW}${EXE}${NC}）"
         echo "  1) 安装并开机自启"
-        echo "  2) 设为开机自启（enable --now）"
-        echo "  3) 取消开机自启"
-        echo "  4) 查看状态"
-        echo "  5) 查看日志"
-        echo "  6) 卸载面板服务（保留 mihomo 与数据）"
-        echo "  7) 完全卸载（面板 + mihomo + 数据，保留可执行文件）"
+        echo "  2) 启动服务"
+        echo "  3) 停止服务"
+        echo "  4) 重启服务"
+        echo "  5) 查看状态"
+        echo "  6) 查看日志"
+        echo "  7) 卸载面板服务（保留 mihomo 与数据）"
+        echo "  8) 完全卸载（面板 + mihomo + 数据，保留可执行文件）"
         echo "  0) 退出"
-        read -r -p "请选择 [0-7]: " sel
+        read -r -p "请选择 [0-8]: " sel
         case "$sel" in
             1) cmd_install   ;;
-            2) cmd_enable    ;;
-            3) cmd_disable   ;;
-            4) cmd_status    ;;
-            5) cmd_logs      ;;
-            6) cmd_uninstall ;;
-            7) cmd_purge     ;;
+            2) cmd_start     ;;
+            3) cmd_stop      ;;
+            4) cmd_restart   ;;
+            5) cmd_status    ;;
+            6) cmd_logs      ;;
+            7) cmd_uninstall ;;
+            8) cmd_purge     ;;
             0) exit 0        ;;
             *) echo -e "${RED}无效选择${NC}" ;;
         esac
@@ -222,14 +213,15 @@ action="${1:-menu}"
 case "$action" in
     menu)      cmd_menu      ;;
     install)   cmd_install   ;;
-    enable)    cmd_enable    ;;
-    disable)   cmd_disable   ;;
+    start)     cmd_start     ;;
+    stop)      cmd_stop      ;;
+    restart)   cmd_restart   ;;
     status)    cmd_status    ;;
     logs)      cmd_logs      ;;
     uninstall) cmd_uninstall ;;
     purge)     cmd_purge     ;;
     *)
-        echo "用法: $0 [install|enable|disable|status|logs|uninstall|purge] [可执行文件路径]" >&2
+        echo "用法: $0 [install|start|stop|restart|status|logs|uninstall|purge] [可执行文件路径]" >&2
         echo "无参数运行时进入交互菜单" >&2
         exit 1
         ;;

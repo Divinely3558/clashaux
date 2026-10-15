@@ -51,7 +51,7 @@ def save_sub(name: str, url: str, proxy: bool = False) -> tuple[bool, str]:
     items = [s for s in list_subs() if s["name"] != name]
     items.append({"name": name, "url": url, "proxy": bool(proxy)})
     SUBS_FILE.write_text(
-        json.dumps(items, ensure_ascii=False, indent=2), encoding="utf-8"
+        json.dumps(items, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
     return True, f"已保存订阅 {name}"
 
@@ -69,7 +69,7 @@ def rename_sub(old_name: str, new_name: str) -> tuple[bool, str]:
         return False, f"订阅「{new_name}」已存在"
     target["name"] = new_name
     SUBS_FILE.write_text(
-        json.dumps(items, ensure_ascii=False, indent=2), encoding="utf-8"
+        json.dumps(items, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
     return True, f"已重命名为 {new_name}"
 
@@ -80,6 +80,6 @@ def remove_sub(name: str) -> tuple[bool, str]:
     if len(rest) == len(items):
         return False, "订阅不存在"
     SUBS_FILE.write_text(
-        json.dumps(rest, ensure_ascii=False, indent=2), encoding="utf-8"
+        json.dumps(rest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
     return True, f"已删除订阅 {name}"

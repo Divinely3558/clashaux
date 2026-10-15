@@ -1,6 +1,6 @@
 # clashaux
 
-**当前版本：v26.10.15e**
+**当前版本：v26.10.15f**
 
 mihomo (Clash Meta) 辅助管理面板，提供 Web UI 来管理配置、订阅和服务。
 
@@ -98,6 +98,27 @@ sudo .venv/bin/python main.py
 - PyYAML
 
 ## 更新日志
+
+### v26.10.15f
+
+**优化**
+
+- 合并 `core/config.py`、`core/mihomo.py`、`core/service.py` 中重复的 `_run()` 函数到共享模块 `core/utils.py`
+- 所有 API 端点改为异步（`async def`），阻塞操作（subprocess、文件 I/O、HTTP 请求）通过 `asyncio.to_thread()` 在线程池执行，避免阻塞事件循环
+- `mihomo.detect()` 添加 10 秒 TTL 缓存，减少 15 秒轮询的重复 subprocess 调用
+- 删除 `core/net.py` 中未使用的 `stream_download()` 函数及相关 CSS 死代码
+- `UNIT = "mihomo"` 常量提取到 `core/paths.py`，消除 mihomo.py 与 service.py 的重复定义
+- 修复 `config.py` 中 `bare except Exception: pass` 改为捕获具体异常（`yaml.YAMLError`, `OSError`）
+- 修复 `config.py` 中 lambda 赋值改为命名函数
+- 统一 `subscription.py` 中 JSON 文件写入的尾部换行
+- 删除无用的 `/api/token` 端点（无认证保护但又被认证中间件拦截，实际无法使用）
+- 提取前端 `renderStats()` 函数消除重复的 stats HTML 模板
+- 修复 `loadBasic()` 在认证启动时被重复调用
+- 日志框限制最大 2000 行，防止 SSE 长时间运行时内存泄漏
+- 标签页后台时清除 15 秒轮询，前台时恢复，减少不必要的服务器请求
+- 添加 `beforeunload` 事件，未保存 base.yaml 更改时离开页面会提示确认
+- 可执行文件非 root 运行时显示提示并要求以 root 或 sudo 运行，随后退出
+- 「重新释放 metacubexd 面板」按钮增加 token 认证检查，未登录时弹出登录框
 
 ### v26.10.15e
 
