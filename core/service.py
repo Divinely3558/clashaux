@@ -61,8 +61,11 @@ def service_action(action: str) -> tuple[bool, str]:
     if err := require_root():
         return False, err
     rc, out = _run(["systemctl", action, UNIT])
+    # reload 失败时（单元无 ExecReload）降级为 restart
+    if action == "reload" and rc != 0 and "not applicable" in out:
+        rc, out = _run(["systemctl", "restart", UNIT])
     ok = rc == 0
-    # start/reload 后短暂探活
+    # start/reload/restart 后短暂探活
     if ok and action in ("start", "restart", "reload"):
         time.sleep(1.0)
         _, state = _run(["systemctl", "is-active", UNIT])

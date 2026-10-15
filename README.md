@@ -1,6 +1,6 @@
 # clashaux
 
-**当前版本：v26.10.15d**
+**当前版本：v26.10.15e**
 
 mihomo (Clash Meta) 辅助管理面板，提供 Web UI 来管理配置、订阅和服务。
 
@@ -98,6 +98,12 @@ sudo .venv/bin/python main.py
 - PyYAML
 
 ## 更新日志
+
+### v26.10.15e
+
+**修复**
+
+- 修复 `.gz` 安装时生成的 systemd 单元缺少 `ExecReload=` 导致 `systemctl reload mihomo` 报错「Job type reload is not applicable」；服务重载逻辑增加降级机制，reload 不可用时自动改用 restart
 
 ### v26.10.15d
 
