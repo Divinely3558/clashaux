@@ -1,6 +1,6 @@
 # clashaux
 
-**当前版本：v26.10.15**
+**当前版本：v26.10.15b**
 
 mihomo (Clash Meta) 辅助管理面板，提供 Web UI 来管理配置、订阅和服务。
 
@@ -97,6 +97,12 @@ sudo .venv/bin/python main.py
 - PyYAML
 
 ## 更新日志
+
+### v26.10.15b
+
+**变更**
+
+- 手动运行时 Ctrl+C 优雅退出：不再打印 KeyboardInterrupt/CancelledError 堆栈，终端仅显示「面板已停止」；systemd 停止时 journal 同步记录该日志
 
 ### v26.10.15
 

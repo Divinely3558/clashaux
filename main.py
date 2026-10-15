@@ -109,6 +109,7 @@ async def lifespan(_app: FastAPI):
     except OSError as e:
         logger.warning("base.yaml 迁移失败: %s", e)
     yield
+    logger.info("面板已停止")
 
 
 app = FastAPI(title="clashaux", docs_url=None, redoc_url=None, lifespan=lifespan)
@@ -481,7 +482,13 @@ def _startup_banner() -> None:
 
 
 if __name__ == "__main__":
+    import asyncio
+
     import uvicorn
 
     _startup_banner()
-    uvicorn.run(app, host=HOST, port=PORT, log_level="warning")
+    try:
+        uvicorn.run(app, host=HOST, port=PORT, log_level="warning")
+    except (KeyboardInterrupt, asyncio.CancelledError):
+        # Ctrl+C 时 uvicorn 取消 lifespan 冒出的信号异常，属正常退出，不打堆栈
+        print("\n面板已停止")
