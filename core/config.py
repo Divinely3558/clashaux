@@ -297,6 +297,44 @@ def list_backups() -> list[dict]:
     return items
 
 
+def backup_file(name: str) -> Path | None:
+    """返回合法的备份文件路径（下载用），名称非法或文件不存在时返回 None。"""
+    if not re.fullmatch(r"config-[\w.-]+\.yaml", name):
+        return None
+    p = BACKUP_DIR / name
+    return p if p.is_file() else None
+
+
+_SAFE_CHARS = re.compile(r"[^\w.-]+")
+
+
+def save_uploaded_backup(filename: str, text: str) -> tuple[bool, str]:
+    """保存上传的备份：mihomo -t 校验通过才接收；重名自动追加 -1/-2…；超出保留数清理旧备份。
+
+    返回 (是否成功, 消息/最终文件名)。
+    """
+    if not text.strip():
+        return False, "文件内容为空"
+    ok, out = validate(text)
+    if not ok:
+        return False, f"配置校验未通过: {out}"
+    BACKUP_DIR.mkdir(parents=True, exist_ok=True)
+    stem = Path(filename).name
+    stem = re.sub(r"\.(yaml|yml)$", "", stem, flags=re.IGNORECASE)
+    stem = _SAFE_CHARS.sub("-", stem).strip("-.") or "upload"
+    if not stem.startswith("config-"):
+        stem = "config-" + stem
+    name, n = f"{stem}.yaml", 0
+    while (BACKUP_DIR / name).exists():
+        n += 1
+        name = f"{stem}-{n}.yaml"
+    (BACKUP_DIR / name).write_text(text, encoding="utf-8")
+    olds = sorted(BACKUP_DIR.glob("config-*.yaml"))
+    for p in olds[:-KEEP_BACKUPS]:
+        p.unlink()
+    return True, name
+
+
 def rollback(name: str) -> tuple[bool, str]:
     """回滚到指定备份：校验通过后覆盖当前配置（先再备份一次）。"""
     if not re.fullmatch(r"config-[\w.-]+\.yaml", name):

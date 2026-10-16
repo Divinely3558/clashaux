@@ -4,12 +4,15 @@ import json
 import logging
 import os
 import secrets
+import socket
+import sys
 import tempfile
+import threading
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, Form, HTTPException, Request, UploadFile
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -123,8 +126,11 @@ async def _check_auth(request: Request):
                             "/api/mihomo/upload-install",
                             "/style.css") or request.url.path.startswith("/static"):
         return None
-    # SSE 端点通过 query param 传 token（EventSource 不支持自定义 Header）
-    if request.url.path == "/api/logs/stream":
+    # SSE 端点与备份下载链接通过 query param 传 token（EventSource / <a> 不支持自定义 Header）
+    if request.url.path == "/api/logs/stream" or (
+        request.url.path.startswith("/api/backups/")
+        and request.url.path.endswith("/download")
+    ):
         token = request.query_params.get("token", "")
         if token != TOKEN:
             return JSONResponse({"error": "未授权"}, status_code=401)
@@ -154,6 +160,52 @@ async def api_login(body: TextBody):
     if body.text == TOKEN:
         return {"ok": True, "token": TOKEN}
     return {"ok": False, "error": "token 错误"}
+
+
+class PanelBody(BaseModel):
+    port: int
+    token: str
+
+
+def _reexec() -> None:
+    """原地重启进程（systemd Type=simple 下 PID 不变），用于端口变更立即生效。"""
+    os.execv(sys.executable, [sys.executable, *sys.argv[1:]])
+
+
+@app.post("/api/panel/config")
+async def api_panel_config(body: PanelBody):
+    """修改面板端口与 Token（写 clashaux.json）。
+
+    Token 即时更新；端口变更先做可用性检查，保存后 0.8 秒原地重启进程绑定新端口。
+    """
+    global TOKEN
+    port = body.port
+    new_token = body.token.strip()
+    if not (1 <= port <= 65535):
+        return {"ok": False, "error": "端口需在 1-65535 之间"}
+    if not new_token:
+        return {"ok": False, "error": "Token 不能为空"}
+    port_changed = port != PORT
+    if port_changed:
+        s = socket.socket()
+        try:
+            s.bind(("0.0.0.0", port))
+        except OSError:
+            return {"ok": False, "error": f"端口 {port} 已被占用"}
+        finally:
+            s.close()
+    _app_config["port"] = port
+    _app_config["token"] = new_token
+    CONFIG_FILE.write_text(
+        json.dumps(_app_config, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+    TOKEN = new_token
+    if port_changed:
+        threading.Timer(0.8, _reexec).start()
+        return {"ok": True, "restart": True, "port": port,
+                "message": "端口已修改，面板将在新端口重启"}
+    return {"ok": True, "restart": False, "message": "面板设置已更新"}
 
 
 @app.get("/api/mihomo/detect")
@@ -357,6 +409,23 @@ async def api_config_apply_text(body: TextBody):
 @app.get("/api/backups")
 async def api_backups():
     return {"items": await asyncio.to_thread(cfg.list_backups)}
+
+
+@app.get("/api/backups/{name}/download")
+async def api_backup_download(name: str):
+    path = await asyncio.to_thread(cfg.backup_file, name)
+    if path is None:
+        return {"ok": False, "error": "备份不存在"}
+    return FileResponse(path, filename=path.name)
+
+
+@app.post("/api/backups/upload")
+async def api_backup_upload(file: UploadFile):
+    text = await _read_upload(file)
+    ok, msg = await asyncio.to_thread(cfg.save_uploaded_backup, file.filename or "", text)
+    if not ok:
+        return {"ok": False, "error": msg}
+    return {"ok": True, "name": msg, "message": f"已保存为 {msg}"}
 
 
 @app.post("/api/backups/{name}/rollback")

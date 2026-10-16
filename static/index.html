@@ -8,31 +8,46 @@
 </head>
 <body>
 <header>
-  <div class="brand-mark">
-    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M4 12h4l3-8 3 16 3-8h4"/>
-    </svg>
-  </div>
-  <div>
-    <h1>clashaux</h1>
-    <div class="sub">mihomo 辅助面板</div>
+  <div class="brand" id="brandArea" title="面板设置">
+    <div class="brand-mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 12h4l3-8 3 16 3-8h4"/>
+      </svg>
+    </div>
+    <div>
+      <h1>clashaux</h1>
+      <div class="sub">mihomo 辅助面板</div>
+    </div>
   </div>
   <span id="stateBadge" class="badge unknown" style="margin-left:auto">检测中</span>
 </header>
 <main>
-  <!-- 分区导航 -->
-  <nav class="tabs">
-    <a href="#cardService"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="8" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/><line x1="7" y1="8" x2="7" y2="8"/><line x1="7" y1="17" x2="7" y2="17"/></svg>服务</a>
-    <a href="#secLogs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>日志</a>
-    <a href="#secMihomo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>内核状态</a>
-    <a href="#secBasic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>基础设置</a>
-    <a href="#secBase"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>头部模板</a>
-    <a href="#secConfig"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>配置更新</a>
-    <a href="#secSub"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a9 9 0 019 9M4 4a16 16 0 0116 16"/><circle cx="5" cy="19" r="1"/></svg>订阅</a>
-    <a href="#secBackup"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v13H3V8M1 3h22v5H1zM10 12h4"/></svg>备份</a>
-  </nav>
+  <aside class="sidebar">
+    <div class="sidebar-label">工作空间</div>
+    <nav class="tabs" aria-label="页面分区">
+      <a href="#cardService"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="8" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/><line x1="7" y1="8" x2="7" y2="8"/><line x1="7" y1="17" x2="7" y2="17"/></svg>服务</a>
+      <a href="#secBasic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>基础设置</a>
+      <a href="#secMihomo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>内核状态</a>
+      <a href="#secLogs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>运行日志</a>
+      <a href="#secBase"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>头部模板</a>
+      <a href="#secSub"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a9 9 0 019 9M4 4a16 16 0 0116 16"/><circle cx="5" cy="19" r="1"/></svg>订阅</a>
+      <a href="#secConfig"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06-.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06-.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>配置更新</a>
+      <a href="#secBackup"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v13H3V8M1 3h22v5H1zM10 12h4"/></svg>备份</a>
+    </nav>
+    <div class="sidebar-note">mihomo<br>辅助管理面板</div>
+  </aside>
+
+  <div class="workspace">
+    <div class="workspace-heading">
+      <div>
+        <div class="eyebrow">MIHOMO CONTROL CENTER</div>
+        <h2>控制台</h2>
+        <p>管理服务状态、代理配置与订阅</p>
+      </div>
+    </div>
 
   <div class="col-2">
+    <div class="stack">
     <section class="card service" id="cardService">
       <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="8" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/></svg>服务控制</h2>
       <div class="tiles">
@@ -47,58 +62,47 @@
           <button class="btn" data-act="start">启动服务</button>
           <button class="btn primary" data-act="reload">重载配置</button>
           <button class="btn" id="btnRefresh">刷新状态</button>
-          <button class="btn" id="btnPanel" style="margin-left:auto">打开面板</button>
+          <button class="btn panel-link" id="btnPanel">打开面板 <span aria-hidden="true">↗</span></button>
         </div>
       </div>
     </section>
 
-    <section class="card" id="secLogs">
-      <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>运行日志</h2>
-      <div class="toolbar">
-        <select id="logN">
-          <option value="50">50 行</option>
-          <option value="200" selected>200 行</option>
-          <option value="500">500 行</option>
-        </select>
-        <button class="btn" id="btnLogs">加载日志</button>
-        <label class="switch"><input type="checkbox" id="logLive">实时跟踪</label>
+    <section class="card" id="secMihomo">
+      <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>内核状态</h2>
+      <div id="mihomoStatus" class="kv" style="grid-template-columns:auto 1fr auto 1fr auto 1fr">
+        <dt>当前版本</dt><dd id="uCur">检测中</dd>
+        <dt>数据目录</dt><dd id="uHome">–</dd>
+        <dt>状态</dt><dd id="uState">–</dd>
       </div>
-      <pre class="log" id="logBox">暂无日志</pre>
+    </section>
+    </div>
+
+    <section class="card basic-settings" id="secBasic">
+      <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>基础设置</h2>
+      <p class="hint">external-controller、external-ui、secret、mixed-port 在此处修改；保存后写入配置文件最头部并自动重载 mihomo，base.yaml 中不再显示这些配置。secret 留空表示控制器不加密。</p>
+      <div class="kv" style="grid-template-columns:auto 1fr;align-items:center">
+        <dt>external-controller</dt><dd><input type="text" class="input" id="bcCtrl" style="width:100%" placeholder="0.0.0.0:9090"></dd>
+        <dt>mixed-port</dt><dd><input type="number" class="input" id="bcPort" style="width:100%" placeholder="7890" min="1" max="65535"></dd>
+        <dt>external-ui</dt><dd><input type="text" class="input" id="bcUi" style="width:100%" placeholder="留空默认（程序目录/metacubexd）"></dd>
+        <dt>secret</dt><dd><div style="display:flex;gap:8px"><input type="text" class="input" id="bcSecret" style="width:100%" placeholder="留空则不加密"><button class="btn" id="btnGenSecret">生成</button></div></dd>
+      </div>
+      <div class="file-row" style="margin-top:4px;flex-wrap:wrap">
+        <button class="btn primary" id="btnBasicSave">保存并应用</button>
+        <button class="btn" id="btnBasicReload">还原</button>
+        <span class="file-name" id="basicStatus"></span>
+        <button class="btn" id="btnDashInstall">重新释放 metacubexd 面板</button>
+        <span class="file-name" id="dashStatus" style="margin-left:auto"></span>
+      </div>
     </section>
   </div>
 
-  <section class="card wide" id="secMihomo">
-    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>mihomo 内核状态</h2>
-    <p class="hint">mihomo 内核由用户自行安装与升级，本面板只负责配置管理；内置 metacubexd 面板会自动释放到 mihomo 数据目录。</p>
-    <div id="mihomoStatus" class="kv" style="grid-template-columns:auto 1fr auto 1fr auto 1fr">
-      <dt>当前版本</dt><dd id="uCur">检测中</dd>
-      <dt>数据目录</dt><dd id="uHome">–</dd>
-      <dt>状态</dt><dd id="uState">–</dd>
-    </div>
-    <div class="file-row" style="margin-top:12px;flex-wrap:wrap;gap:8px">
-      <button class="btn" id="btnDashInstall">重新释放 metacubexd 面板</button>
-      <span class="file-name" id="dashStatus" style="margin-left:auto"></span>
-    </div>
-  </section>
-
-  <section class="card wide" id="secBasic">
-    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>基础设置</h2>
-    <p class="hint">external-controller、external-ui、secret、mixed-port 在此处修改；保存后写入配置文件最头部并自动重载 mihomo，base.yaml 中不再显示这些配置。secret 留空表示控制器不加密。</p>
-    <div class="kv" style="grid-template-columns:auto 1fr auto 1fr;align-items:center">
-      <dt>external-controller</dt><dd><input type="text" class="input" id="bcCtrl" style="width:100%" placeholder="0.0.0.0:9090"></dd>
-      <dt>mixed-port</dt><dd><input type="number" class="input" id="bcPort" style="width:100%" placeholder="7890" min="1" max="65535"></dd>
-      <dt>external-ui</dt><dd><input type="text" class="input" id="bcUi" style="width:100%" placeholder="留空默认（程序目录/metacubexd）"></dd>
-      <dt>secret</dt><dd><div style="display:flex;gap:8px"><input type="text" class="input" id="bcSecret" style="width:100%" placeholder="留空则不加密"><button class="btn" id="btnGenSecret">生成</button></div></dd>
-    </div>
-    <div class="file-row" style="margin-top:4px">
-      <button class="btn primary" id="btnBasicSave">保存并应用</button>
-      <button class="btn" id="btnBasicReload">还原</button>
-      <span class="file-name" id="basicStatus"></span>
-    </div>
+  <section class="card" id="secLogs">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>运行日志</h2>
+    <pre class="log" id="logBox">暂无日志</pre>
   </section>
 
   <section class="card wide" id="secBase">
-    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>base.yaml · 头部模板</h2>
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>头部模板</h2>
     <p class="hint warn">「保存 base.yaml」只更新模板，下次换头（上传/粘贴/订阅）时生效；「保存并应用」会立即把当前模板套用到生效配置（保留正文，只替换头部）并重载 mihomo。</p>
     <textarea id="baseEditor" class="input" style="width:100%;min-height:280px" placeholder="加载中…" spellcheck="false"></textarea>
     <div class="file-row" style="margin-top:12px">
@@ -106,27 +110,6 @@
       <button class="btn" id="btnBaseSave">保存 base.yaml</button>
       <button class="btn primary" id="btnBaseApply">保存并应用</button>
       <span class="file-name" id="baseDirty" style="color:var(--warn)">● 未保存</span>
-    </div>
-  </section>
-
-  <section class="card wide" id="secConfig">
-    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>配置更新</h2>
-    <p class="hint">上传 config.yaml 或直接粘贴配置内容，面板会自动去掉它的头部、套用 base.yaml 头部，经 mihomo -t 校验通过后才写入生效，原配置自动备份。</p>
-    <div class="file-row">
-      <label class="btn">选择 config.yaml<input type="file" id="cfgFile" accept=".yaml,.yml" hidden></label>
-      <span class="file-name" id="cfgName">未选择文件</span>
-      <button class="btn" id="btnLoadCurrent" style="margin-left:auto">读取当前配置</button>
-    </div>
-    <textarea id="cfgPaste" class="input" style="width:100%;min-height:220px;margin-top:12px" placeholder="或直接粘贴 config.yaml 内容到此…" spellcheck="false"></textarea>
-    <div class="file-row" style="margin-top:12px">
-      <button class="btn" id="btnPreview" disabled>预览校验</button>
-      <button class="btn primary" id="btnApply" disabled>写入并重载</button>
-      <button class="btn" id="btnClear">清空</button>
-    </div>
-    <div class="verdict" id="verdict">
-      <span class="badge" id="vBadge">–</span>
-      <div class="stats" id="vStats" style="margin:0"></div>
-      <pre class="out" id="vOut" style="display:none"></pre>
     </div>
   </section>
 
@@ -151,12 +134,68 @@
     <div class="backups" id="subList" style="margin-top:12px"><div class="empty">暂无已保存订阅</div></div>
   </section>
 
-  <section class="card wide" id="secBackup">
+  <div class="col-2">
+  <section class="card" id="secConfig">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06-.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06-.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>配置更新</h2>
+    <p class="hint">上传 config.yaml 或直接粘贴配置内容，面板会自动去掉它的头部、套用 base.yaml 头部，经 mihomo -t 校验通过后才写入生效，原配置自动备份。</p>
+    <div class="file-row">
+      <label class="btn">选择 config.yaml<input type="file" id="cfgFile" accept=".yaml,.yml" hidden></label>
+      <span class="file-name" id="cfgName">未选择文件</span>
+      <button class="btn" id="btnLoadCurrent" style="margin-left:auto">读取当前配置</button>
+    </div>
+    <textarea id="cfgPaste" class="input" style="width:100%;min-height:220px;margin-top:12px" placeholder="或直接粘贴 config.yaml 内容到此…" spellcheck="false"></textarea>
+    <div class="file-row" style="margin-top:12px">
+      <button class="btn" id="btnPreview" disabled>预览校验</button>
+      <button class="btn primary" id="btnApply" disabled>写入并重载</button>
+      <button class="btn" id="btnClear">清空</button>
+    </div>
+    <div class="verdict" id="verdict">
+      <span class="badge" id="vBadge">–</span>
+      <div class="stats" id="vStats" style="margin:0"></div>
+      <pre class="out" id="vOut" style="display:none"></pre>
+    </div>
+  </section>
+
+  <section class="card" id="secBackup">
     <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v13H3V8M1 3h22v5H1zM10 12h4"/></svg>配置备份（最近 5 份）</h2>
+    <div class="file-row" style="margin-bottom:12px">
+      <input type="file" id="bkFile" accept=".yaml,.yml" hidden>
+      <button class="btn" id="btnBkUpload">上传备份</button>
+      <span class="file-name" id="bkStatus"></span>
+    </div>
     <div class="backups" id="backupList"><div class="empty">加载中…</div></div>
   </section>
+  </div>
+  </div>
 </main>
 <div id="toasts"></div>
+
+<!-- 面板设置弹窗（点击左上角 Logo / 品牌文字触发） -->
+<div id="panelModal" class="modal" style="display:none">
+  <div class="modal-content">
+    <h3>面板设置</h3>
+    <div id="panelStep1">
+      <p>先验证当前 Token，通过后才能修改端口与 Token</p>
+      <input type="password" id="panelCurToken" class="input" style="width:100%;margin:12px 0" placeholder="当前 Token">
+      <div class="modal-actions">
+        <button class="btn primary" id="btnPanelVerify">验证</button>
+        <button class="btn" id="btnPanelCancel1">取消</button>
+      </div>
+    </div>
+    <div id="panelStep2" style="display:none">
+      <div class="kv" style="grid-template-columns:auto 1fr;align-items:center;margin:12px 0">
+        <dt>端口</dt><dd><input type="number" class="input" id="panelPort" style="width:100%" min="1" max="65535"></dd>
+        <dt>新 Token</dt><dd><div style="display:flex;gap:8px"><input type="text" class="input" id="panelToken" style="width:100%"><button class="btn" id="btnPanelGen">生成</button></div></dd>
+      </div>
+      <p style="font-size:12px;margin:0 0 12px">确认后立即生效：仅改 Token 即时更新；改端口面板会自动重启并跳转到新地址。</p>
+      <div class="modal-actions">
+        <button class="btn primary" id="btnPanelSave">确认修改</button>
+        <button class="btn" id="btnPanelCancel2">取消</button>
+      </div>
+    </div>
+    <div id="panelError" style="color:var(--bad);font-size:13px;margin-top:12px;display:none"></div>
+  </div>
+</div>
 
 <!-- 登录弹窗 -->
 <div id="loginModal" class="modal" style="display:none">
@@ -167,9 +206,9 @@
     <div class="modal-actions">
       <button class="btn primary" id="btnLogin">确认</button>
     </div>
-    <div id="loginError" style="color:#fb7185;font-size:13px;margin-top:12px;display:none"></div>
+    <div id="loginError" style="color:var(--bad);font-size:13px;margin-top:12px;display:none"></div>
     <p style="font-size:12px;color:var(--muted);margin-top:16px">
-      Token 位于 <code style="background:rgba(13,21,38,.6);padding:2px 6px;border-radius:4px">clashaux.json</code> 文件中
+      Token 位于 <code style="background:rgba(93,84,164,.1);padding:2px 6px;border-radius:4px">clashaux.json</code> 文件中
     </p>
   </div>
 </div>
@@ -183,9 +222,9 @@
       <a class="btn primary" href="https://github.com/MetaCubeX/mihomo/releases/latest" target="_blank" rel="noopener" style="text-decoration:none">🔗 打开 mihomo 下载页（GitHub Releases）</a>
     </div>
     <div style="background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.35);border-radius:8px;padding:12px 14px;margin-bottom:12px">
-      <div style="font-size:13px;font-weight:600;color:#fbbf24;margin-bottom:6px">📌 安装步骤</div>
+      <div style="font-size:13px;font-weight:600;color:#785b12;margin-bottom:6px">📌 安装步骤</div>
       <ol style="color:var(--muted);font-size:13px;margin:0 0 10px;padding-left:20px;line-height:1.9">
-        <li>在下载页选择与自己 CPU 匹配的 <code>.deb</code> 安装包（注意 GOAMD64 档位<span id="blockLevelHint" style="color:#fbbf24"></span>）</li>
+        <li>在下载页选择与自己 CPU 匹配的 <code>.deb</code> 安装包（注意 GOAMD64 档位<span id="blockLevelHint" style="color:#785b12"></span>）</li>
         <li>下载后在终端执行：<code>sudo apt install ./下载的包.deb</code>（或 <code>sudo dpkg -i 下载的包.deb</code>），或直接用下方「上传安装」</li>
         <li>安装完成后点击下方「重新检测」，通过后自动释放 metacubexd 面板并开放登录</li>
       </ol>
@@ -293,6 +332,75 @@ $("btnLogin").onclick = async () => {
 };
 tokenInput.onkeydown = e => { if (e.key === "Enter") $("btnLogin").click(); };
 loginModal.onclick = e => { if (e.target === loginModal) hideLoginModal(); };
+
+/* ---------- 面板设置（点击品牌区，验证 Token 后改端口 / Token） ---------- */
+const panelModal = $("panelModal"), panelErr = $("panelError");
+let panelVerifiedToken = "";
+
+$("brandArea").onclick = () => {
+  panelModal.style.display = "flex";
+  $("panelStep1").style.display = "block";
+  $("panelStep2").style.display = "none";
+  $("panelCurToken").value = "";
+  panelErr.style.display = "none";
+  panelVerifiedToken = "";
+  setTimeout(() => $("panelCurToken").focus(), 100);
+};
+function closePanelModal() { panelModal.style.display = "none"; }
+$("btnPanelCancel1").onclick = closePanelModal;
+$("btnPanelCancel2").onclick = closePanelModal;
+panelModal.onclick = e => { if (e.target === panelModal) closePanelModal(); };
+function panelFail(msg) { panelErr.textContent = msg; panelErr.style.display = "block"; }
+
+$("btnPanelVerify").onclick = async () => {
+  const t = $("panelCurToken").value.trim();
+  if (!t) return panelFail("请输入当前 Token");
+  try {
+    const d = await api("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: t }),
+    });
+    if (!d.ok) return panelFail(d.error || "Token 错误");
+    panelVerifiedToken = t;
+    panelErr.style.display = "none";
+    $("panelStep1").style.display = "none";
+    $("panelStep2").style.display = "block";
+    $("panelPort").value = location.port || 8686;
+    $("panelToken").value = t;
+  } catch (e) { panelFail(e.message); }
+};
+$("panelCurToken").onkeydown = e => { if (e.key === "Enter") $("btnPanelVerify").click(); };
+$("btnPanelGen").onclick = () => {
+  $("panelToken").value = [...crypto.getRandomValues(new Uint8Array(16))]
+    .map(b => b.toString(16).padStart(2, "0")).join("");
+};
+
+$("btnPanelSave").onclick = async () => {
+  const port = parseInt($("panelPort").value, 10);
+  const token = $("panelToken").value.trim();
+  if (!(port >= 1 && port <= 65535)) return panelFail("端口需在 1-65535 之间");
+  if (!token) return panelFail("新 Token 不能为空");
+  try {
+    const d = await fetch("/api/panel/config", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + panelVerifiedToken },
+      body: JSON.stringify({ port, token }),
+    }).then(r => r.json());
+    if (!d.ok) return panelFail(d.error || "保存失败");
+    // 本地会话同步为新 Token，无需重新登录
+    authToken = token;
+    localStorage.setItem("clashaux_token", token);
+    if (d.restart) {
+      $("panelStep2").innerHTML = "<p style='font-size:14px'>✅ 已生效，面板正在新端口重启，3 秒后自动跳转…</p>";
+      panelErr.style.display = "none";
+      setTimeout(() => { location.href = location.protocol + "//" + location.hostname + ":" + port + "/"; }, 3000);
+    } else {
+      closePanelModal();
+      toast("面板设置已更新，立即生效");
+    }
+  } catch (e) { panelFail(e.message); }
+};
 
 /* ---------- 基础设置 ---------- */
 const bcCtrl = $("bcCtrl"), bcUi = $("bcUi"), bcSecret = $("bcSecret"), bcPort = $("bcPort");
@@ -416,25 +524,21 @@ function appendLog(line) {
   }
   if (stick) logBox.scrollTop = logBox.scrollHeight;
 }
-$("btnLogs").onclick = async () => {
+async function loadLogs() {
   try {
-    const d = await api("/api/logs?n=" + $("logN").value);
+    const d = await api("/api/logs?n=200");
     logBox.textContent = d.lines.join("\n") || "（暂无日志）";
     logBox.scrollTop = logBox.scrollHeight;
   } catch (e) { toast(e.message, false); }
-};
-$("logLive").onchange = e => {
-  if (e.target.checked) {
-    if (logBox.textContent === "暂无日志") $("btnLogs").click();
-    es = new EventSource("/api/logs/stream?token=" + encodeURIComponent(authToken));
-    es.onmessage = ev => appendLog(ev.data);
-    es.onerror = () => { es.close(); es = null; e.target.checked = false; };
-    toast("已开启实时跟踪");
-  } else if (es) {
-    es.close(); es = null;
-    toast("已停止实时跟踪");
-  }
-};
+}
+// 实时跟踪常开：认证后自动连接日志流，断线 5 秒后自动重连
+function startLiveLog() {
+  if (es) return;
+  if (logBox.textContent === "暂无日志") loadLogs();
+  es = new EventSource("/api/logs/stream?token=" + encodeURIComponent(authToken));
+  es.onmessage = ev => appendLog(ev.data);
+  es.onerror = () => { es.close(); es = null; setTimeout(startLiveLog, 5000); };
+}
 
 /* ---------- 配置更新 ---------- */
 const cfgFile = $("cfgFile"), cfgPaste = $("cfgPaste"), btnPreview = $("btnPreview"), btnApply = $("btnApply"), btnClear = $("btnClear"), btnLoadCurrent = $("btnLoadCurrent");
@@ -555,8 +659,15 @@ async function refreshBackups() {
     d.items.forEach(it => {
       const row = document.createElement("div");
       row.className = "backup";
-      row.innerHTML = `<span class="name">${esc(it.name)}</span>` +
-        `<span class="meta">${fmtSize(it.size)} · ${fmtTime(it.mtime)}</span>`;
+      const a = document.createElement("a");
+      a.className = "name";
+      a.textContent = it.name.replace(/^config-/, "").replace(/\.yaml$/, "");
+      a.href = "/api/backups/" + encodeURIComponent(it.name) + "/download?token=" + encodeURIComponent(authToken);
+      a.title = "下载 " + it.name;
+      const meta = document.createElement("span");
+      meta.className = "meta";
+      meta.textContent = fmtSize(it.size);
+      row.append(a, meta);
       const btn = document.createElement("button");
       btn.className = "btn danger";
       btn.textContent = "回滚";
@@ -566,6 +677,22 @@ async function refreshBackups() {
     });
   } catch (e) { /* 静默 */ }
 }
+$("btnBkUpload").onclick = () => $("bkFile").click();
+$("bkFile").onchange = async e => {
+  const f = e.target.files[0];
+  e.target.value = "";
+  if (!f) return;
+  const st = $("bkStatus");
+  st.textContent = "上传中…";
+  try {
+    const fd = new FormData();
+    fd.append("file", f);
+    const d = await api("/api/backups/upload", { method: "POST", body: fd });
+    if (!d.ok) throw new Error(d.error || "上传失败");
+    st.textContent = "✅ " + d.message;
+    refreshBackups();
+  } catch (err) { st.textContent = "❌ " + err.message; }
+};
 async function rollback(name) {
   if (!confirm("确认回滚到 " + name + "？当前配置会先再备份一次。")) return;
   try {
@@ -945,6 +1072,7 @@ async function afterAuth() {
   refreshSubs();
   loadBase();
   loadBasic();
+  startLiveLog();
 }
 
 (async () => {
