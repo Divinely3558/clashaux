@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=26.10.21">
+<link rel="alternate icon" type="image/png" href="/favicon.png?v=26.10.21">
+<link rel="apple-touch-icon" href="/favicon.png?v=26.10.21">
+<title>clashaux</title>
+<link rel="stylesheet" href="/style.css?v=26.10.27">
+</head>
+<body>
+<header>
+  <div class="brand" id="brandArea" title="面板设置">
+    <div class="brand-mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 12h4l3-8 3 16 3-8h4"/>
+      </svg>
+    </div>
+    <div>
+      <h1>clashaux</h1>
+      <div class="sub">mihomo 辅助面板</div>
+    </div>
+  </div>
+  <span id="stateBadge" class="badge unknown" style="margin-left:auto">检测中</span>
+</header>
+<main>
+  <div class="workspace">
+    <div class="workspace-heading">
+      <div>
+        <div class="eyebrow">MIHOMO CONTROL CENTER</div>
+        <h2>控制台</h2>
+        <p>管理服务状态、代理配置与订阅</p>
+      </div>
+    </div>
+
+    <div class="col-2">
+      <div class="stack">
+      <section class="card service" id="cardService">
+        <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="8" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/></svg>服务控制<button class="btn panel-link" id="btnPanel">打开面板 <span aria-hidden="true">↗</span></button></h2>
+        <div class="tiles">
+          <div class="tile"><div class="label">开机自启</div><div class="num small" id="pEnabled"><span class="sk"></span></div></div>
+          <div class="tile"><div class="label">主进程 PID</div><div class="num" id="pPid"><span class="sk"></span></div></div>
+          <div class="tile"><div class="label">内存占用</div><div class="num" id="pMem"><span class="sk"></span></div></div>
+          <div class="tile"><div class="label">启动时间</div><div class="num small" id="pSince"><span class="sk"></span></div></div>
+        </div>
+        <div class="actions">
+          <div class="btns">
+            <button class="btn" id="btnToggleEnable" data-act="enable">设为自启</button>
+            <button class="btn" id="btnToggleRun" data-act="start" disabled>启动服务</button>
+            <button class="btn primary" data-act="reload">重载配置</button>
+            <button class="btn" id="btnRefresh">刷新状态</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="card" id="secMihomo">
+        <h2 style="display:flex;align-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>内核状态<button class="btn danger-solid" id="btnUpgrade" style="margin-left:auto">升级</button></h2>
+        <div id="mihomoStatus" class="kv" style="grid-template-columns:auto 1fr auto 1fr auto 1fr">
+          <dt>当前版本</dt><dd id="uCur">检测中</dd>
+          <dt>数据目录</dt><dd id="uHome">–</dd>
+          <dt>状态</dt><dd id="uState">–</dd>
+        </div>
+      </section>
+      </div>
+
+      <section class="card basic-settings" id="secBasic">
+        <h2 style="flex-wrap:wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/></svg>基础设置<button class="btn danger-solid" id="btnDashInstall" style="margin-left:auto;white-space:nowrap">重新释放面板</button></h2>
+        <div class="hint">此处修改 mihomo 基础连接配置：external-controller 为外部控制接口，面板与内核通信及「打开面板」均依赖此地址；mixed-port 为混合代理端口；external-ui 为 metacubexd 面板目录；secret 为控制接口访问密钥（留空不加密）。保存并应用后自动重载内核生效。</div>
+        <div class="kv" style="grid-template-columns:auto 1fr;align-items:center">
+          <dt>external-controller</dt><dd><input type="text" class="input" id="bcCtrl" style="width:100%" placeholder="0.0.0.0:9090"></dd>
+          <dt>mixed-port</dt><dd><input type="number" class="input" id="bcPort" style="width:100%" placeholder="7890" min="1" max="65535"></dd>
+          <dt>external-ui</dt><dd><input type="text" class="input" id="bcUi" style="width:100%" placeholder="留空默认（程序目录/metacubexd）"></dd>
+          <dt>secret</dt><dd><div style="display:flex;gap:8px"><input type="text" class="input" id="bcSecret" style="width:100%" maxlength="14" placeholder="留空则不加密（8-14 位）"><button class="btn" id="btnGenSecret" style="flex-shrink:0;white-space:nowrap">生成</button></div></dd>
+        </div>
+        <div class="file-row" style="flex-wrap:wrap">
+          <button class="btn primary" id="btnBasicSave">保存并应用</button>
+          <button class="btn" id="btnBasicReload">还原</button>
+        </div>
+      </section>
+    </div>
+
+    <div class="col-2 col-2-flip">
+      <section class="card" id="secBase">
+        <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>头部模板</h2>
+        <textarea id="baseEditor" class="input" style="width:100%;flex-grow:1;min-height:160px;resize:none" placeholder="加载中…" spellcheck="false"></textarea>
+        <div class="file-row" style="margin-top:8px">
+          <button class="btn" id="btnBaseReload">重新加载</button>
+          <button class="btn" id="btnBaseSave">保存 base.yaml</button>
+          <button class="btn primary" id="btnBaseApply">保存并应用</button>
+          <span class="file-name" id="baseDirty" style="color:var(--warn)">● 未保存</span>
+        </div>
+      </section>
+
+      <section class="card" id="secConfig">
+        <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06-.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06-.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>配置更新<span class="file-name" id="cfgName" style="margin-left:auto;font-weight:400">未选择文件</span><button class="btn" id="btnLoadCurrent">读取当前配置</button><label class="btn">选择 config.yaml<input type="file" id="cfgFile" accept=".yaml,.yml" hidden></label></h2>
+        <textarea id="cfgPaste" class="input" style="width:100%;flex-grow:1;min-height:200px;resize:none" placeholder="或直接粘贴 config.yaml 内容到此…" spellcheck="false"></textarea>
+        <div class="file-row" style="margin-top:8px">
+          <button class="btn" id="btnPreview" disabled>预览校验</button>
+          <button class="btn primary" id="btnApply" disabled>写入并重载</button>
+          <button class="btn" id="btnClear">清空</button>
+        </div>
+      </section>
+    </div>
+
+    <div class="col-2 col-2-compact">
+      <section class="card" id="secSub">
+        <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a9 9 0 019 9M4 4a16 16 0 0116 16"/><circle cx="5" cy="19" r="1"/></svg>订阅更新</h2>
+        <div class="file-row">
+          <input type="text" class="input" id="subUrl" placeholder="https://… 订阅链接">
+          <label class="switch"><input type="checkbox" id="subProxy">走本机代理</label>
+          <button class="btn" id="btnSubPreview">拉取预览</button>
+          <button class="btn primary" id="btnSubApply" disabled>一键应用</button>
+        </div>
+        <div class="file-row" style="margin-top:6px">
+          <input type="text" class="input" id="subName" placeholder="订阅名称（保存用，可留空)">
+          <button class="btn" id="btnSubSave">保存订阅</button>
+          <button class="btn" id="btnSubUpdateAll">全部更新</button>
+        </div>
+        <div class="backups" id="subList" style="margin-top:6px"><div class="empty">暂无已保存订阅</div></div>
+      </section>
+
+      <section class="card" id="secBackup">
+        <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v13H3V8M1 3h22v5H1zM10 12h4"/></svg>配置备份<input type="file" id="bkFile" accept=".yaml,.yml" hidden><button class="btn" id="btnBkUpload" style="margin-left:auto">上传备份</button></h2>
+        <div class="backups" id="backupList"><div class="empty">加载中…</div></div>
+      </section>
+    </div>
+  </div>
+</main>
+<div id="toasts"></div>
+
+<!-- 通用详情弹窗：校验失败的长输出等 toast 放不下的内容，点击 toast 展开 -->
+<div id="detailModal" class="modal" style="display:none">
+  <div class="modal-content" style="max-width:600px;max-height:92vh;overflow:auto">
+    <h3 id="detailTitle">详情</h3>
+    <pre class="out" id="detailOut" style="margin:0"></pre>
+    <div class="modal-actions">
+      <button class="btn" id="btnDetailClose">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- 面板设置弹窗（点击左上角 Logo / 品牌文字触发） -->
+<div id="panelModal" class="modal" style="display:none">
+  <div class="modal-content">
+    <h3>面板设置</h3>
+    <div id="panelStep1">
+      <p>先验证当前 Token，通过后才能修改端口与 Token</p>
+      <input type="password" id="panelCurToken" class="input" style="width:100%;margin:12px 0" placeholder="当前 Token">
+      <div class="modal-actions">
+        <button class="btn primary" id="btnPanelVerify">验证</button>
+        <button class="btn" id="btnPanelCancel1">取消</button>
+      </div>
+    </div>
+    <div id="panelStep2" style="display:none">
+      <div class="kv" style="grid-template-columns:auto 1fr;align-items:center;margin:12px 0">
+        <dt>端口</dt><dd><input type="number" class="input" id="panelPort" style="width:100%" min="1" max="65535"></dd>
+        <dt>新 Token</dt><dd><div style="display:flex;gap:8px"><input type="text" class="input" id="panelToken" style="width:100%"><button class="btn" id="btnPanelGen" style="flex-shrink:0;white-space:nowrap">生成</button></div></dd>
+      </div>
+      <p style="font-size:12px;margin:0 0 12px">确认后立即生效：仅改 Token 即时更新；改端口面板会自动重启并跳转到新地址。</p>
+      <div class="modal-actions">
+        <button class="btn primary" id="btnPanelSave">确认修改</button>
+        <button class="btn" id="btnPanelCancel2">取消</button>
+      </div>
+    </div>
+    <div id="panelError" style="color:var(--bad);font-size:13px;margin-top:12px;display:none"></div>
+  </div>
+</div>
+
+<!-- 登录弹窗 -->
+<div id="loginModal" class="modal" style="display:none">
+  <div class="modal-content">
+    <h3>访问认证</h3>
+    <p>请输入访问令牌（token）</p>
+    <input type="password" id="tokenInput" class="input" style="width:100%;margin:12px 0" placeholder="Token">
+    <div class="modal-actions">
+      <button class="btn primary" id="btnLogin">确认</button>
+    </div>
+    <div id="loginError" style="color:var(--bad);font-size:13px;margin-top:12px;display:none"></div>
+    <p style="font-size:12px;color:var(--muted);margin-top:16px">
+      Token 位于 <code style="background:rgba(93,84,164,.1);padding:2px 6px;border-radius:4px">clashaux.json</code> 文件中
+    </p>
+  </div>
+</div>
+
+<!-- 未安装 mihomo 阻断弹窗（安装成功前不可关闭，无法进入面板） -->
+<div id="blockModal" class="modal" style="display:none">
+  <div class="modal-content" style="max-width:600px;max-height:92vh;overflow:auto">
+    <h3>你未安装 mihomo</h3>
+    <p>本面板依赖 mihomo 内核，请先自行安装 mihomo，<b>安装成功后才能登录使用</b>。</p>
+    <div class="file-row" style="margin:12px 0">
+      <a class="btn primary" href="https://github.com/MetaCubeX/mihomo/releases/latest" target="_blank" rel="noopener" style="text-decoration:none">🔗 打开 mihomo 下载页（GitHub Releases）</a>
+    </div>
+    <div style="background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.35);border-radius:8px;padding:12px 14px;margin-bottom:12px">
+      <div style="font-size:13px;font-weight:600;color:#785b12;margin-bottom:6px">📌 安装步骤</div>
+      <ol style="color:var(--muted);font-size:13px;margin:0 0 10px;padding-left:20px;line-height:1.9">
+        <li>在下载页选择与自己 CPU 匹配的 <code>.deb</code> 安装包（注意 GOAMD64 档位<span id="blockLevelHint" style="color:#785b12"></span>）</li>
+        <li>下载后在终端执行：<code>sudo apt install ./下载的包.deb</code>（或 <code>sudo dpkg -i 下载的包.deb</code>），或直接用下方「上传安装」</li>
+        <li>安装完成后点击下方「重新检测」，通过后自动释放 metacubexd 面板并开放登录</li>
+      </ol>
+      <div style="font-size:12px;color:var(--muted);line-height:1.7;border-top:1px solid rgba(251,191,36,.25);padding-top:8px">
+        <b>v3</b> · 2013 年后的普通 PC / 笔记本（Intel 4 代后、AMD 锐龙），需 AVX2<br>
+        <b>v2</b> · 2008~2013 年老电脑、老服务器，需 SSE4.2 / POPCNT<br>
+        <b>v1</b> · 很老的 CPU（J1900、G1840、初代至强等），任意 x86-64，最稳
+      </div>
+    </div>
+    <div id="blockMsg" style="font-size:13px;margin-bottom:10px;display:none"></div>
+    <div style="border-top:1px solid var(--line);padding-top:14px;margin-top:4px">
+      <div style="font-size:13px;font-weight:600;margin-bottom:8px">📤 上传安装包（.deb / .gz）</div>
+      <div class="file-row" style="flex-wrap:wrap;gap:8px;margin-bottom:10px">
+        <label class="btn">选择安装包<input type="file" id="blockFile" accept=".deb,.gz" hidden></label>
+        <span class="file-name" id="blockFileName">未选择文件</span>
+      </div>
+      <input type="password" id="blockToken" class="input" style="width:100%;margin-bottom:10px" placeholder="输入面板 Token 确认安装">
+      <div class="modal-actions" style="margin-bottom:2px">
+        <button class="btn primary" id="btnBlockUpload" disabled>上传并安装</button>
+        <button class="btn" id="btnRedetect">重新检测</button>
+      </div>
+      <div id="blockUploadMsg" style="font-size:13px;margin-top:8px;display:none"></div>
+    </div>
+  </div>
+</div>
+
+<!-- mihomo 升级弹窗（校验：版本必须更高、同 GOAMD64 档位、同架构） -->
+<div id="upgradeModal" class="modal" style="display:none">
+  <div class="modal-content" style="max-width:600px;max-height:92vh;overflow:auto">
+    <h3>升级 mihomo 内核</h3>
+    <p>上传更高版本的安装包（.deb / .gz），面板安装前会先校验：<b>新版本必须高于当前版本</b>、<b>GOAMD64 档位相同</b>（v1→v1、v2→v2、v3→v3）、<b>CPU 架构相同</b>（amd64 / arm64），任一不符都会拒绝安装。</p>
+    <div class="file-row" style="flex-wrap:wrap;gap:8px;margin-bottom:10px">
+      <label class="btn">选择升级包<input type="file" id="upFile" accept=".deb,.gz" hidden></label>
+      <span class="file-name" id="upFileName">未选择文件</span>
+    </div>
+    <input type="password" id="upToken" class="input" style="width:100%;margin-bottom:10px" placeholder="输入面板 Token 确认升级">
+    <div class="modal-actions" style="margin-bottom:2px">
+      <button class="btn primary" id="btnUpgradeUpload" disabled>上传并升级</button>
+      <button class="btn" id="btnUpgradeCancel">取消</button>
+    </div>
+    <div id="upgradeMsg" style="font-size:13px;margin-top:8px;display:none"></div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const fmtSize = n => n > 1048576 ? (n / 1048576).toFixed(1) + " MB" : (n / 1024).toFixed(1) + " KB";
+function esc(s) { const d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+
+let authToken = localStorage.getItem("clashaux_token") || "";
+
+function toast(msg, ok = true, detail = "") {
+  const el = document.createElement("div");
+  el.className = "toast" + (ok ? "" : " err") + (detail ? " link" : "");
+  el.textContent = (ok ? "✅ " : "❌ ") + msg + (detail ? "（点击查看详情）" : "");
+  if (detail) el.onclick = () => showDetail(msg, detail);
+  $("toasts").appendChild(el);
+  setTimeout(() => el.remove(), 5000);
+}
+
+// 统计压成一行；长文本（校验失败输出等）走详情弹窗，toast 只报结论
+const statsLine = s => s ? ` · ${s.proxies} 节点 · ${s.groups} 策略组 · ${s.providers} 订阅 · ${s.rules} 规则 · ${s.rule_providers} 规则集` : "";
+function showDetail(title, text) {
+  $("detailTitle").textContent = title;
+  $("detailOut").textContent = text;
+  $("detailModal").style.display = "flex";
+}
+$("btnDetailClose").onclick = () => $("detailModal").style.display = "none";
+$("detailModal").onclick = e => { if (e.target === $("detailModal")) $("detailModal").style.display = "none"; };
+
+/* ---------- 气泡定位：锚定按钮右下方，下方放不下自动上翻，不超出屏幕 ---------- */
+function placeBubble(el, anchor, display) {
+  el.style.display = display;
+  el.style.visibility = "hidden"; // 先渲染再测量尺寸
+  const r = anchor.getBoundingClientRect();
+  const bw = el.offsetWidth, bh = el.offsetHeight;
+  el.style.visibility = "";
+  let left = Math.min(Math.max(8, r.right - bw), window.innerWidth - bw - 8);
+  let top = r.bottom + 8;
+  let flip = false;
+  if (top + bh > window.innerHeight - 8) {
+    top = Math.max(8, r.top - bh - 8);
+    flip = true;
+  }
+  el.style.left = left + "px";
+  el.style.top = top + "px";
+  el.classList.toggle("flip", flip);
+}
+
+/* ---------- Popconfirm 气泡确认：仅一个确认键，点空白处/滚屏/Esc 取消 ---------- */
+const popEl = document.createElement("div");
+popEl.className = "popconfirm";
+popEl.innerHTML = `<button class="btn danger pop-ok">确认</button>`;
+document.body.appendChild(popEl);
+let popResolve = null, popAnchor = null;
+
+function popConfirm(anchor, danger = true) {
+  popDone(false);
+  popEl.querySelector(".pop-ok").className = "btn pop-ok " + (danger ? "danger" : "primary");
+  placeBubble(popEl, anchor, "block");
+  popAnchor = anchor;
+  return new Promise(res => { popResolve = res; });
+}
+function popDone(v) {
+  popEl.style.display = "none";
+  popAnchor = null;
+  if (popResolve) { popResolve(v); popResolve = null; }
+}
+popEl.querySelector(".pop-ok").onclick = () => popDone(true);
+
+/* ---------- 重命名 Popover 气泡卡片：输入框+确认并排，空/含非法字符禁用确认 ---------- */
+const renPop = document.createElement("div");
+renPop.className = "popconfirm pop-rename";
+renPop.innerHTML = `<input type="text" class="input" placeholder="新名称" autocomplete="off" title="名称不能为空，不能包含 / 或 \\ 字符"><button class="btn primary" disabled>确认</button>`;
+document.body.appendChild(renPop);
+let renResolve = null, renAnchor = null;
+const renInput = renPop.querySelector("input"), renOk = renPop.querySelector("button");
+const REN_BAD = /[\/\\\x00-\x1f]/; // 与后端对齐：名称仅存 JSON，排除斜杠与控制字符
+
+function renValidate() { renOk.disabled = !renInput.value.trim() || REN_BAD.test(renInput.value); }
+renInput.oninput = renValidate;
+renInput.onkeydown = e => { if (e.key === "Enter" && !renOk.disabled) renOk.click(); };
+renOk.onclick = () => renDone(renInput.value.trim());
+
+function popRename(anchor, oldName) {
+  renDone(null);
+  renInput.value = oldName;
+  renValidate();
+  placeBubble(renPop, anchor, "flex");
+  renAnchor = anchor;
+  setTimeout(() => { renInput.focus(); renInput.select(); }, 50);
+  return new Promise(res => { renResolve = res; });
+}
+function renDone(v) {
+  renPop.style.display = "none";
+  renAnchor = null;
+  if (renResolve) { renResolve(v); renResolve = null; }
+}
+
+// 捕获阶段监听：点气泡和触发按钮以外的任何位置都取消（先于按钮自身的 click 处理，不会误关刚打开的气泡）
+document.addEventListener("click", e => {
+  if (popResolve && !popEl.contains(e.target) && !(popAnchor && popAnchor.contains(e.target))) popDone(false);
+  if (renResolve && !renPop.contains(e.target) && !(renAnchor && renAnchor.contains(e.target))) renDone(null);
+}, true);
+window.addEventListener("scroll", () => { popDone(false); renDone(null); }, true);
+window.addEventListener("resize", () => { popDone(false); renDone(null); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") { popDone(false); renDone(null); } });
+
+async function api(url, opts = {}) {
+  opts.headers = opts.headers || {};
+  if (authToken) {
+    opts.headers["Authorization"] = "Bearer " + authToken;
+  }
+  const r = await fetch(url, opts);
+  if (r.status === 401) {
+    authToken = "";
+    localStorage.removeItem("clashaux_token");
+    showLoginModal();
+    throw new Error("未授权");
+  }
+  if (!r.ok) throw new Error("HTTP " + r.status);
+  return r.json();
+}
+
+/* ---------- 登录 ---------- */
+const loginModal = $("loginModal"), tokenInput = $("tokenInput"), loginError = $("loginError");
+
+function showLoginModal() {
+  loginModal.style.display = "flex";
+  tokenInput.value = "";
+  loginError.style.display = "none";
+  setTimeout(() => tokenInput.focus(), 100);
+}
+function hideLoginModal() {
+  loginModal.style.display = "none";
+}
+
+$("btnLogin").onclick = async () => {
+  const token = tokenInput.value.trim();
+  if (!token) { loginError.textContent = "请输入 token"; loginError.style.display = "block"; return; }
+  try {
+    const d = await api("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: token }),
+    });
+    if (d.ok) {
+      authToken = d.token;
+      localStorage.setItem("clashaux_token", authToken);
+      hideLoginModal();
+      toast("认证成功");
+      await afterAuth();
+    } else if (d.blocked) {
+      // 未安装 mihomo：阻断登录，显示安装指引
+      showBlock(d.level);
+    } else {
+      loginError.textContent = d.error || "token 错误";
+      loginError.style.display = "block";
+    }
+  } catch (e) {
+    loginError.textContent = e.message;
+    loginError.style.display = "block";
+  }
+};
+tokenInput.onkeydown = e => { if (e.key === "Enter") $("btnLogin").click(); };
+loginModal.onclick = e => { if (e.target === loginModal) hideLoginModal(); };
+
+/* ---------- 面板设置（点击品牌区，验证 Token 后改端口 / Token） ---------- */
+const panelModal = $("panelModal"), panelErr = $("panelError");
+let panelVerifiedToken = "";
+
+$("brandArea").onclick = () => {
+  panelModal.style.display = "flex";
+  $("panelStep1").style.display = "block";
+  $("panelStep2").style.display = "none";
+  $("panelCurToken").value = "";
+  panelErr.style.display = "none";
+  panelVerifiedToken = "";
+  setTimeout(() => $("panelCurToken").focus(), 100);
+};
+function closePanelModal() { panelModal.style.display = "none"; }
+$("btnPanelCancel1").onclick = closePanelModal;
+$("btnPanelCancel2").onclick = closePanelModal;
+panelModal.onclick = e => { if (e.target === panelModal) closePanelModal(); };
+function panelFail(msg) { panelErr.textContent = msg; panelErr.style.display = "block"; }
+
+$("btnPanelVerify").onclick = async () => {
+  const t = $("panelCurToken").value.trim();
+  if (!t) return panelFail("请输入当前 Token");
+  try {
+    const d = await api("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: t }),
+    });
+    if (!d.ok) return panelFail(d.error || "Token 错误");
+    panelVerifiedToken = t;
+    panelErr.style.display = "none";
+    $("panelStep1").style.display = "none";
+    $("panelStep2").style.display = "block";
+    $("panelPort").value = location.port || 8686;
+    $("panelToken").value = t;
+  } catch (e) { panelFail(e.message); }
+};
+$("panelCurToken").onkeydown = e => { if (e.key === "Enter") $("btnPanelVerify").click(); };
+$("btnPanelGen").onclick = () => {
+  $("panelToken").value = [...crypto.getRandomValues(new Uint8Array(16))]
+    .map(b => b.toString(16).padStart(2, "0")).join("");
+};
+
+$("btnPanelSave").onclick = async () => {
+  const port = parseInt($("panelPort").value, 10);
+  const token = $("panelToken").value.trim();
+  if (!(port >= 1 && port <= 65535)) return panelFail("端口需在 1-65535 之间");
+  if (!token) return panelFail("新 Token 不能为空");
+  try {
+    const d = await fetch("/api/panel/config", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + panelVerifiedToken },
+      body: JSON.stringify({ port, token }),
+    }).then(r => r.json());
+    if (!d.ok) return panelFail(d.error || "保存失败");
+    // 本地会话同步为新 Token，无需重新登录
+    authToken = token;
+    localStorage.setItem("clashaux_token", token);
+    if (d.restart) {
+      $("panelStep2").innerHTML = "<p style='font-size:14px'>✅ 已生效，面板正在新端口重启，3 秒后自动跳转…</p>";
+      panelErr.style.display = "none";
+      setTimeout(() => { location.href = location.protocol + "//" + location.hostname + ":" + port + "/"; }, 3000);
+    } else {
+      closePanelModal();
+      toast("面板设置已更新，立即生效");
+    }
+  } catch (e) { panelFail(e.message); }
+};
+
+/* ---------- 基础设置 ---------- */
+const bcCtrl = $("bcCtrl"), bcUi = $("bcUi"), bcSecret = $("bcSecret"), bcPort = $("bcPort");
+let basicOriginal = null;
+
+async function loadBasic() {
+  try {
+    const d = await api("/api/basic");
+    basicOriginal = d;
+    bcCtrl.value = d["external-controller"] || "";
+    bcUi.value = d["external-ui"] || "";
+    bcSecret.value = d["secret"] || "";
+    bcPort.value = d["mixed-port"] ?? "";
+  } catch (e) { /* 静默 */ }
+}
+
+$("btnGenSecret").onclick = () => {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+  const len = 8 + (crypto.getRandomValues(new Uint32Array(1))[0] % 7);
+  const arr = crypto.getRandomValues(new Uint32Array(len));
+  bcSecret.value = Array.from(arr, n => chars[n % chars.length]).join("");
+};
+$("btnBasicReload").onclick = () => { if (basicOriginal) loadBasic(); };
+$("btnBasicSave").onclick = async () => {
+  const btn = $("btnBasicSave");
+  if (!bcCtrl.value.trim()) { toast("external-controller 不能为空", false); return; }
+  if (!bcUi.value.trim()) { toast("external-ui 不能为空", false); return; }
+  const sec = bcSecret.value.trim();
+  if (sec && (sec.length < 8 || sec.length > 14)) { toast("secret 长度需为 8-14 位（留空则不加密）", false); return; }
+  const body = {
+    external_controller: bcCtrl.value.trim(),
+    external_ui: bcUi.value.trim(),
+    secret: bcSecret.value.trim(),
+    mixed_port: parseInt(bcPort.value, 10) || 0,
+  };
+  btn.disabled = true;
+  try {
+    const d = await api("/api/basic", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    toast(d.message || d.error, d.ok);
+    if (d.ok) { refreshStatus(); loadBasic(); }
+  } catch (e) { toast(e.message, false); }
+  btn.disabled = false;
+};
+
+/* ---------- 服务状态 ---------- */
+async function refreshStatus() {
+  try {
+    const d = await api("/api/status");
+    const s = d.service;
+    const badge = $("stateBadge");
+    if (s.active === "active") { badge.className = "badge on"; badge.textContent = "运行中"; }
+    else if (s.active === "failed") { badge.className = "badge off"; badge.textContent = "运行失败"; }
+    else if (s.active === "inactive") { badge.className = "badge unknown"; badge.textContent = "已停止"; }
+    else { badge.className = "badge unknown"; badge.textContent = s.active; }
+    const enMap = { enabled: "已开启", disabled: "已关闭", static: "静态", masked: "已屏蔽", generated: "已生成", indirect: "间接" };
+    $("pEnabled").textContent = enMap[s.enabled] || s.enabled || "–";
+    $("pPid").textContent = s.pid && s.pid !== "0" ? s.pid : "–";
+    $("pSince").textContent = s.since || "–";
+    $("pMem").textContent = s.memory ? (s.memory / 1048576).toFixed(1) + " MB" : "–";
+
+    // 启动/停止合并为一个切换按钮：状态驱动，未知状态禁用（可用「刷新状态」重新获取）
+    const tbtn = $("btnToggleRun");
+    if (s.active === "active") {
+      tbtn.dataset.act = "stop";
+      tbtn.textContent = "停止服务";
+      tbtn.disabled = false;
+    } else if (s.active === "inactive" || s.active === "failed") {
+      tbtn.dataset.act = "start";
+      tbtn.textContent = "启动服务";
+      tbtn.disabled = false;
+    } else {
+      tbtn.dataset.act = "start";
+      tbtn.textContent = "状态未知";
+      tbtn.disabled = true;
+    }
+
+    // 设为自启/取消自启切换：UnitFileState=enabled 时显示「取消自启」
+    const ebtn = $("btnToggleEnable");
+    ebtn.dataset.act = s.enabled === "enabled" ? "disable" : "enable";
+    ebtn.textContent = s.enabled === "enabled" ? "取消自启" : "设为自启";
+
+    // mihomo 内核状态卡片
+    $("uCur").textContent = d.mihomo_version ? "v" + d.mihomo_version : "未安装";
+    $("uHome").textContent = d.mihomo_home || "–";
+    $("uState").textContent = d.mihomo_installed
+      ? (s.active === "active" ? "运行中" : (s.active === "inactive" ? "已停止" : s.active))
+      : "未安装";
+
+    // 生效配置缺失时后端自动生成，首次发现时提示一次
+    if (d.config && d.config.created && !window.__cfgCreatedNotified) {
+      window.__cfgCreatedNotified = true;
+      toast("未找到生效配置，已自动生成 " + (d.config.path || "config.yaml"));
+    }
+  } catch (e) { /* 静默轮询失败 */ }
+}
+
+document.querySelectorAll("[data-act]").forEach(b => {
+  b.onclick = async () => {
+    b.disabled = true;
+    try {
+      const d = await api("/api/service/" + b.dataset.act, { method: "POST" });
+      toast(d.message, d.ok);
+      // 等状态刷新完成后再恢复按钮：切换按钮（启动/停止）需按最新状态校准文案与可用性，避免连点竞态
+      await refreshStatus();
+    } catch (e) { toast(e.message, false); }
+    b.disabled = false;
+  };
+});
+$("btnRefresh").onclick = () => { refreshStatus(); };
+$("btnPanel").onclick = () => {
+  // 端口取自基础设置的 external-controller（0.0.0.0 等监听地址换成本机访问域名）
+  let port = "9090";
+  if (basicOriginal && basicOriginal["external-controller"]) {
+    const p = String(basicOriginal["external-controller"]).split(":").pop();
+    if (/^\d+$/.test(p)) port = p;
+  }
+  window.open("http://" + window.location.hostname + ":" + port + "/ui/", "_blank");
+};
+
+/* ---------- 配置更新 ---------- */
+const cfgFile = $("cfgFile"), cfgPaste = $("cfgPaste"), btnPreview = $("btnPreview"), btnApply = $("btnApply"), btnClear = $("btnClear"), btnLoadCurrent = $("btnLoadCurrent");
+
+btnLoadCurrent.onclick = async () => {
+  if (cfgPaste.value.trim() && !await popConfirm(btnLoadCurrent)) return;
+  btnLoadCurrent.disabled = true;
+  btnLoadCurrent.textContent = "读取中…";
+  try {
+    const d = await api("/api/config/current");
+    if (d.ok) {
+      cfgPaste.value = d.text;
+      cfgFile.value = "";
+      $("cfgName").textContent = "（当前运行配置）";
+      btnPreview.disabled = false;
+      cfgResetVerdict();
+      toast("已加载当前运行配置");
+    } else {
+      toast(d.error || "读取失败", false);
+    }
+  } catch (e) { toast(e.message, false); }
+  btnLoadCurrent.disabled = false;
+  btnLoadCurrent.textContent = "读取当前配置";
+};
+
+function cfgHasContent() {
+  return !!cfgFile.files[0] || !!cfgPaste.value.trim();
+}
+function cfgResetVerdict() {
+  btnApply.disabled = true;
+}
+cfgFile.onchange = () => {
+  const f = cfgFile.files[0];
+  $("cfgName").textContent = f ? f.name + "（" + fmtSize(f.size) + "）" : "未选择文件";
+  btnPreview.disabled = !cfgHasContent();
+  cfgResetVerdict();
+};
+cfgPaste.oninput = () => {
+  btnPreview.disabled = !cfgHasContent();
+  cfgResetVerdict();
+};
+btnClear.onclick = () => {
+  cfgFile.value = "";
+  $("cfgName").textContent = "未选择文件";
+  cfgPaste.value = "";
+  btnPreview.disabled = true;
+  btnApply.disabled = true;
+  cfgResetVerdict();
+};
+async function cfgPreview() {
+  btnPreview.disabled = true; btnApply.disabled = true;
+  try {
+    const f = cfgFile.files[0];
+    let d;
+    if (f) {
+      const fd = new FormData(); fd.append("file", f);
+      d = await api("/api/config/preview", { method: "POST", body: fd });
+    } else {
+      d = await api("/api/config/preview-text", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: cfgPaste.value }),
+      });
+    }
+    if (d.ok) {
+      toast("校验通过" + statsLine(d.stats), true);
+      btnApply.disabled = false;
+    } else {
+      toast("校验未通过", false, (d.error || "") + (d.output ? "\n" + d.output : ""));
+      btnApply.disabled = true;
+    }
+  } catch (e) { toast(e.message, false); }
+  btnPreview.disabled = !cfgHasContent();
+}
+btnPreview.onclick = cfgPreview;
+btnApply.onclick = async () => {
+  if (!await popConfirm(btnApply)) return;
+  btnApply.disabled = true; btnPreview.disabled = true;
+  try {
+    const f = cfgFile.files[0];
+    let d;
+    if (f) {
+      const fd = new FormData(); fd.append("file", f);
+      d = await api("/api/config/apply", { method: "POST", body: fd });
+    } else {
+      d = await api("/api/config/apply-text", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: cfgPaste.value }),
+      });
+    }
+    toast(d.message || d.error, d.ok);
+    if (d.backup) toast("已备份为 " + d.backup);
+    refreshStatus();
+    refreshBackups();
+    if (d.ok) cfgResetVerdict();
+  } catch (e) { toast(e.message, false); }
+  btnApply.disabled = false; btnPreview.disabled = !cfgHasContent();
+};
+
+/* ---------- 备份 ---------- */
+async function refreshBackups() {
+  try {
+    const d = await api("/api/backups");
+    const box = $("backupList");
+    if (!d.items.length) { box.innerHTML = '<div class="empty">暂无备份</div>'; return; }
+    // 下载链接改用短时效 ticket（60 秒内可重复使用），避免 token 留在浏览器历史
+    let ticket = "";
+    try { ticket = (await api("/api/ticket", { method: "POST" })).ticket || ""; } catch (e) { /* 静默 */ }
+    box.innerHTML = "";
+    // 最多展示 5 个最新备份：接口已按时间倒序返回，更旧的直接隐藏不渲染
+    d.items.slice(0, 5).forEach(it => {
+      const row = document.createElement("div");
+      row.className = "backup";
+      const a = document.createElement("a");
+      a.className = "name";
+      a.textContent = it.name.replace(/^config-/, "").replace(/\.yaml$/, "");
+      a.href = "/api/backups/" + encodeURIComponent(it.name) + "/download?ticket=" + encodeURIComponent(ticket);
+      a.title = "下载 " + it.name;
+      const meta = document.createElement("span");
+      meta.className = "meta";
+      meta.textContent = fmtSize(it.size);
+      row.append(a, meta);
+      const btn = document.createElement("button");
+      btn.className = "btn danger";
+      btn.textContent = "回滚";
+      btn.onclick = () => rollback(it.name, btn);
+      row.appendChild(btn);
+      box.appendChild(row);
+    });
+  } catch (e) { /* 静默 */ }
+}
+$("btnBkUpload").onclick = () => $("bkFile").click();
+$("bkFile").onchange = async e => {
+  const f = e.target.files[0];
+  e.target.value = "";
+  if (!f) return;
+  toast("上传中…", true);
+  try {
+    const fd = new FormData();
+    fd.append("file", f);
+    const d = await api("/api/backups/upload", { method: "POST", body: fd });
+    if (!d.ok) throw new Error(d.error || "上传失败");
+    toast("✅ " + d.message, true);
+    refreshBackups();
+  } catch (err) { toast("❌ " + err.message, false); }
+};
+async function rollback(name, anchor) {
+  if (!await popConfirm(anchor)) return;
+  try {
+    const d = await api("/api/backups/" + encodeURIComponent(name) + "/rollback", { method: "POST" });
+    toast(d.message || d.error, d.ok);
+    refreshStatus();
+    refreshBackups();
+  } catch (e) { toast(e.message, false); }
+}
+
+/* ---------- 订阅 ---------- */
+const subUrl = $("subUrl"), btnSubPreview = $("btnSubPreview"), btnSubApply = $("btnSubApply");
+
+// 互斥锁：任一订阅写入期间，所有「一键更新/一键应用」按钮禁用，防止同时更新多个
+let subBusy = false;
+const subUpdBtns = [];
+let subItems = [];        // 最近一次渲染的已保存订阅
+function setSubBusy(v) {
+  subBusy = v;
+  subUpdBtns.forEach(b => { b.disabled = v; });
+  btnSubApply.disabled = v || !subUrl.value.trim();
+  $("btnSubUpdateAll").disabled = v;
+}
+
+function reportResult(d) {
+  if (d.ok) {
+    const fetched = d.fetched_chars ? `拉取成功（${(d.fetched_chars / 1024).toFixed(1)} KB）· ` : "";
+    toast(fetched + "校验通过" + statsLine(d.stats), true);
+  } else {
+    toast("校验未通过", false, (d.error || "") + (d.output ? "\n" + d.output : ""));
+  }
+}
+
+function subBody(url) {
+  return JSON.stringify({ url: (url ?? subUrl.value).trim(), proxy: $("subProxy").checked });
+}
+
+subUrl.oninput = () => { btnSubApply.disabled = !subUrl.value.trim(); };
+
+btnSubPreview.onclick = async () => {
+  if (!subUrl.value.trim()) { toast("请先填写订阅链接", false); return; }
+  btnSubPreview.disabled = true;
+  btnSubPreview.textContent = "拉取中…";
+  try {
+    const d = await api("/api/sub/preview", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: subBody(),
+    });
+    reportResult(d);
+  } catch (e) { toast(e.message, false); }
+  btnSubPreview.disabled = false;
+  btnSubPreview.textContent = "拉取预览";
+};
+btnSubApply.onclick = async () => {
+  if (!subUrl.value.trim() || subBusy) return;
+  if (!await popConfirm(btnSubApply)) return;
+  setSubBusy(true);
+  btnSubPreview.disabled = true;
+  btnSubApply.textContent = "应用中…";
+  try {
+    const d = await api("/api/sub/apply", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: subBody(),
+    });
+    if (d.ok) {
+      toast((d.message || "订阅已生效") + statsLine(d.stats), true);
+    } else {
+      toast(d.error || "应用失败", false, (d.error || "") + (d.output ? "\n" + d.output : ""));
+    }
+    refreshStatus();
+    refreshBackups();
+  } catch (e) { toast(e.message, false); }
+  setSubBusy(false);
+  btnSubPreview.disabled = false;
+  btnSubApply.textContent = "一键应用";
+};
+$("btnSubSave").onclick = async () => {
+  if (!subUrl.value.trim()) { toast("请先填写订阅链接", false); return; }
+  try {
+    const d = await api("/api/subs/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: subUrl.value.trim(), name: $("subName").value.trim(), proxy: $("subProxy").checked }),
+    });
+    toast(d.message, d.ok);
+    if (d.ok) { $("subName").value = ""; refreshSubs(); }
+  } catch (e) { toast(e.message, false); }
+};
+
+// 全部一键更新：遍历已保存订阅逐个拉取写入，最终 toast 汇总结果
+$("btnSubUpdateAll").onclick = async () => {
+  if (subBusy) return;
+  if (!subItems.length) { toast("暂无已保存订阅", false); return; }
+  if (!await popConfirm($("btnSubUpdateAll"))) return;
+  setSubBusy(true);
+  const btn = $("btnSubUpdateAll");
+  btnSubPreview.disabled = true;
+  btn.textContent = `更新中 0/${subItems.length}`;
+  let okCount = 0;
+  for (let i = 0; i < subItems.length; i++) {
+    const it = subItems[i];
+    btn.textContent = `更新中 ${i + 1}/${subItems.length}`;
+    try {
+      const r = await api("/api/sub/apply", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: it.url, proxy: !!it.proxy }),
+      });
+      if (r.ok) okCount++;
+    } catch (e) {
+      if (!authToken) break;  // 会话过期：api() 已弹登录框，停止批量
+    }
+  }
+  toast(`全部订阅更新完成：成功 ${okCount}/${subItems.length}`, okCount === subItems.length);
+  refreshStatus();
+  refreshBackups();
+  setSubBusy(false);
+  btnSubPreview.disabled = false;
+  btn.textContent = "全部更新";
+};
+
+async function refreshSubs() {
+  try {
+    const d = await api("/api/subs");
+    const box = $("subList");
+    subUpdBtns.length = 0;
+    subItems = d.items || [];
+    if (!subItems.length) { box.innerHTML = '<div class="empty">暂无已保存订阅</div>'; return; }
+    box.innerHTML = "";
+    subItems.forEach(it => {
+      const row = document.createElement("div");
+      row.className = "backup sub-row";
+      row.innerHTML = `<span class="name">${esc(it.name)}${it.proxy ? " · 走代理" : ""}</span><span class="url" title="点击复制：${esc(it.url)}">${esc(it.url)}</span>`;
+      const urlEl = row.querySelector(".url");
+      urlEl.style.cursor = "pointer";
+      urlEl.onclick = () => {
+        navigator.clipboard.writeText(it.url).then(
+          () => toast("已复制订阅链接"),
+          () => { const ta = document.createElement("textarea"); ta.value = it.url; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove(); toast("已复制订阅链接"); }
+        );
+      };
+      const btnUpd = document.createElement("button");
+      btnUpd.className = "btn primary";
+      btnUpd.textContent = "一键更新";
+      btnUpd.disabled = subBusy;
+      subUpdBtns.push(btnUpd);
+      btnUpd.onclick = async () => {
+        if (subBusy) return;
+        if (!await popConfirm(btnUpd)) return;
+        setSubBusy(true);
+        btnUpd.textContent = "更新中…";
+        try {
+          const r = await api("/api/sub/apply", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url: it.url, proxy: !!it.proxy }),
+          });
+          const t = new Date().toLocaleTimeString("zh-CN", { hour12: false });
+          toast(r.ok ? `订阅「${it.name}」已生效（${r.stats ? r.stats.proxies + " 节点" : "写入成功"}）· ${t}` : `「${it.name}」更新失败: ${r.error || "未知错误"} · ${t}`, r.ok);
+          refreshStatus();
+          refreshBackups();
+        } catch (e) {
+          toast(e.message, false);
+        }
+        setSubBusy(false);
+        btnUpd.textContent = "一键更新";
+      };
+      const btnRen = document.createElement("button");
+      btnRen.className = "btn";
+      btnRen.textContent = "重命名";
+      btnRen.onclick = async () => {
+        const nn = await popRename(btnRen, it.name);
+        if (!nn || nn === it.name) return;
+        try {
+          const r = await api("/api/subs/rename", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: it.name, new_name: nn }),
+          });
+          toast(r.message || r.error, r.ok);
+          refreshSubs();
+        } catch (e) { toast(e.message, false); }
+      };
+      const btnDel = document.createElement("button");
+      btnDel.className = "btn danger";
+      btnDel.textContent = "删除";
+      btnDel.onclick = async () => {
+        if (!await popConfirm(btnDel)) return;
+        try {
+          const r = await api("/api/subs/delete", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: it.name }),
+          });
+          toast(r.message, r.ok);
+          refreshSubs();
+        } catch (e) { toast(e.message, false); }
+      };
+      row.appendChild(btnUpd);
+      row.appendChild(btnRen);
+      row.appendChild(btnDel);
+      box.appendChild(row);
+    });
+  } catch (e) { /* 静默 */ }
+}
+
+/* ---------- mihomo 安装检测（未安装阻断，不允许进入面板） ---------- */
+const blockModal = $("blockModal"), blockMsg = $("blockMsg"),
+      btnRedetect = $("btnRedetect");
+
+function showBlock(level) {
+  $("blockLevelHint").textContent = level ? "（本机 CPU 推荐档位：" + level + "）" : "";
+  blockMsg.style.display = "none";
+  blockModal.style.display = "flex";
+}
+function hideBlock() { blockModal.style.display = "none"; }
+function showBlockMsg(text) {
+  blockMsg.textContent = text;
+  blockMsg.style.color = "#fb7185";
+  blockMsg.style.display = "block";
+}
+
+async function detectMihomo() {
+  const r = await fetch("/api/mihomo/detect");
+  if (!r.ok) throw new Error("HTTP " + r.status);
+  return r.json();
+}
+
+// 检测通过后的统一收尾：关阻断弹窗 → 释放面板 → 进面板或弹登录
+async function onMihomoReady(version) {
+  hideBlock();
+  toast("mihomo v" + version + " 就绪，metacubexd 面板已释放");
+  if (authToken) { await afterAuth(); }
+  else { showLoginModal(); }
+}
+
+// 用户自行安装完成后点「重新检测」：通过则释放面板并继续登录流程
+btnRedetect.onclick = async () => {
+  btnRedetect.disabled = true;
+  btnRedetect.textContent = "检测中…";
+  blockMsg.style.display = "none";
+  try {
+    const d = await detectMihomo();
+    if (d.installed) {
+      await onMihomoReady(d.version);
+    } else {
+      showBlockMsg("仍未检测到 mihomo，请确认已安装成功（终端执行 mihomo -v 可验证）");
+    }
+  } catch (e) {
+    showBlockMsg("检测失败: " + e.message);
+  }
+  btnRedetect.disabled = false;
+  btnRedetect.textContent = "重新检测";
+};
+
+// ---------- 阻断弹窗内的上传安装（.deb / .gz） ----------
+const blockFile = $("blockFile"), blockFileName = $("blockFileName"),
+      blockToken = $("blockToken"), btnBlockUpload = $("btnBlockUpload"),
+      blockUploadMsg = $("blockUploadMsg");
+
+function blockUploadReady() {
+  btnBlockUpload.disabled = !(blockFile.files[0] && blockToken.value.trim());
+}
+blockFile.onchange = () => {
+  const f = blockFile.files[0];
+  blockFileName.textContent = f ? f.name + "（" + fmtSize(f.size) + "）" : "未选择文件";
+  blockUploadMsg.style.display = "none";
+  blockUploadReady();
+};
+blockToken.addEventListener("input", blockUploadReady);
+blockToken.addEventListener("keydown", e => {
+  if (e.key === "Enter" && !btnBlockUpload.disabled) btnBlockUpload.click();
+});
+
+function showBlockUploadMsg(text, ok) {
+  blockUploadMsg.textContent = text;
+  blockUploadMsg.style.color = ok ? "var(--ok, #34d399)" : "#fb7185";
+  blockUploadMsg.style.display = "block";
+}
+
+btnBlockUpload.onclick = async () => {
+  const f = blockFile.files[0];
+  if (!f) return;
+  btnBlockUpload.disabled = true;
+  btnRedetect.disabled = true;
+  btnBlockUpload.textContent = "安装中…";
+  blockUploadMsg.style.display = "none";
+  try {
+    const fd = new FormData();
+    fd.append("file", f);
+    fd.append("token", blockToken.value.trim());
+    const r = await fetch("/api/mihomo/upload-install", { method: "POST", body: fd });
+    const d = await r.json();
+    if (d.ok) {
+      showBlockUploadMsg("✅ " + d.message + "，正在重新检测…", true);
+      await onMihomoReady(d.version);
+    } else {
+      showBlockUploadMsg("❌ " + (d.error || "安装失败"), false);
+    }
+  } catch (e) {
+    showBlockUploadMsg("❌ " + e.message, false);
+  }
+  btnBlockUpload.textContent = "上传并安装";
+  btnRedetect.disabled = false;
+  blockUploadReady();
+};
+
+/* ---------- mihomo 升级（版本必须更高 + 同档位 + 同架构，后端校验） ---------- */
+const upgradeModal = $("upgradeModal"), upFile = $("upFile"), upFileName = $("upFileName"),
+      upToken = $("upToken"), btnUpgradeUpload = $("btnUpgradeUpload"), upgradeMsg = $("upgradeMsg");
+
+$("btnUpgrade").onclick = () => {
+  if (!authToken) { showLoginModal(); return; }
+  upFile.value = "";
+  upFileName.textContent = "未选择文件";
+  upToken.value = "";
+  upgradeMsg.style.display = "none";
+  btnUpgradeUpload.disabled = true;
+  upgradeModal.style.display = "flex";
+};
+$("btnUpgradeCancel").onclick = () => { upgradeModal.style.display = "none"; };
+upgradeModal.onclick = e => { if (e.target === upgradeModal) upgradeModal.style.display = "none"; };
+
+function upgradeReady() {
+  btnUpgradeUpload.disabled = !(upFile.files[0] && upToken.value.trim());
+}
+upFile.onchange = () => {
+  const f = upFile.files[0];
+  upFileName.textContent = f ? f.name + "（" + fmtSize(f.size) + "）" : "未选择文件";
+  upgradeMsg.style.display = "none";
+  upgradeReady();
+};
+upToken.addEventListener("input", upgradeReady);
+upToken.addEventListener("keydown", e => {
+  if (e.key === "Enter" && !btnUpgradeUpload.disabled) btnUpgradeUpload.click();
+});
+
+function showUpgradeMsg(text, ok) {
+  upgradeMsg.textContent = text;
+  upgradeMsg.style.color = ok ? "var(--ok, #34d399)" : "#fb7185";
+  upgradeMsg.style.display = "block";
+}
+
+btnUpgradeUpload.onclick = async () => {
+  const f = upFile.files[0];
+  if (!f) return;
+  btnUpgradeUpload.disabled = true;
+  btnUpgradeUpload.textContent = "升级中…";
+  upgradeMsg.style.display = "none";
+  try {
+    const fd = new FormData();
+    fd.append("file", f);
+    fd.append("token", upToken.value.trim());
+    // /api/mihomo/upgrade 不在 auth 白名单，必须带 Authorization（Form token 为二次确认）
+    const r = await fetch("/api/mihomo/upgrade", {
+      method: "POST",
+      headers: { "Authorization": "Bearer " + authToken },
+      body: fd,
+    });
+    const d = await r.json();
+    if (d.ok) {
+      showUpgradeMsg("✅ " + (d.message || "升级成功"), true);
+      toast("mihomo 已升级到 v" + (d.version || ""), true);
+      setTimeout(() => { upgradeModal.style.display = "none"; }, 1500);
+      refreshStatus();
+    } else {
+      showUpgradeMsg("❌ " + (d.error || "升级失败"), false);
+    }
+  } catch (e) {
+    showUpgradeMsg("❌ " + e.message, false);
+  }
+  btnUpgradeUpload.textContent = "上传并升级";
+  upgradeReady();
+};
+
+/* ---------- metacubexd 面板释放 ---------- */
+const btnDashInstall = $("btnDashInstall");
+btnDashInstall.onclick = async () => {
+  if (!authToken) { showLoginModal(); return; }
+  if (!await popConfirm(btnDashInstall)) return;
+  btnDashInstall.disabled = true;
+  try {
+    const d = await api("/api/dashboard/install", { method: "POST" });
+    toast(d.ok ? "面板已释放" : (d.error || "释放失败"), d.ok);
+  } catch (e) {
+    toast(e.message, false);
+  }
+  btnDashInstall.disabled = false;
+};
+
+/* ---------- base.yaml 编辑 ---------- */
+const baseEditor = $("baseEditor"), btnBaseSave = $("btnBaseSave"), btnBaseApply = $("btnBaseApply"), btnBaseReload = $("btnBaseReload"), baseDirty = $("baseDirty");
+let baseOriginal = "";
+async function loadBase() {
+  try {
+    const d = await api("/api/base");
+    baseEditor.value = d.text; baseOriginal = d.text; baseDirty.style.display = "none";
+  } catch (e) { toast(e.message, false); }
+}
+baseEditor.oninput = () => { baseDirty.style.display = baseEditor.value !== baseOriginal ? "inline" : "none"; };
+window.addEventListener("beforeunload", e => {
+  if (baseEditor.value !== baseOriginal) { e.preventDefault(); e.returnValue = ""; }
+});
+btnBaseReload.onclick = async () => {
+  if (baseEditor.value !== baseOriginal && !await popConfirm(btnBaseReload)) return;
+  loadBase();
+};
+async function saveBase() {
+  if (!baseEditor.value.trim()) { toast("内容不能为空", false); return false; }
+  try {
+    const d = await api("/api/base", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: baseEditor.value }),
+    });
+    if (d.ok) { baseOriginal = baseEditor.value; baseDirty.style.display = "none"; }
+    else toast(d.error, false);
+    return !!d.ok;
+  } catch (e) { toast(e.message, false); return false; }
+}
+btnBaseSave.onclick = async () => {
+  if (!await popConfirm(btnBaseSave, false)) return;
+  btnBaseSave.disabled = true;
+  if (await saveBase()) toast("base.yaml 已保存，下次换头时生效", true);
+  btnBaseSave.disabled = false;
+};
+btnBaseApply.onclick = async () => {
+  if (!baseEditor.value.trim()) { toast("内容不能为空", false); return; }
+  if (!await popConfirm(btnBaseApply)) return;
+  btnBaseApply.disabled = true;
+  try {
+    if (!await saveBase()) return;
+    const d = await api("/api/base/apply", { method: "POST" });
+    toast(d.message || d.error, d.ok);
+    if (d.ok) refreshStatus();
+  } catch (e) { toast(e.message, false); }
+  finally { btnBaseApply.disabled = false; }
+};
+
+/* ---------- 初始化 ---------- */
+
+// 状态轮询：全局唯一，页面隐藏时暂停，切回时恢复（重复调用先清旧定时器）
+let statusTimer = null;
+function startStatusPolling() {
+  if (statusTimer) clearInterval(statusTimer);
+  statusTimer = setInterval(refreshStatus, 15000);
+}
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    if (statusTimer) { clearInterval(statusTimer); statusTimer = null; }
+  } else if (authToken) {
+    refreshStatus();
+    startStatusPolling();
+  }
+});
+
+// 认证通过后（页面加载已有 token 或首次登录成功）共用初始化
+async function afterAuth() {
+  try {
+    await refreshStatus();
+  } catch (e) {
+    authToken = "";
+    localStorage.removeItem("clashaux_token");
+    showLoginModal();
+    return;
+  }
+  startStatusPolling();
+  refreshBackups();
+  refreshSubs();
+  loadBase();
+  loadBasic();
+}
+
+(async () => {
+  // 先检测 mihomo：未安装时阻断，任何 token 都无法进入面板
+  let d;
+  try {
+    d = await detectMihomo();
+  } catch (e) {
+    d = { installed: true };  // 检测接口异常时不卡死登录
+  }
+  if (!d.installed) {
+    showBlock(d.level);
+    return;
+  }
+  if (!authToken) {
+    showLoginModal();
+    return;
+  }
+  await afterAuth();
+})();
+
+/* =========================================================
+ * 交互增强：光标光斑 + 命令面板
+ * =======================================================*/
+(function () {
+  /* —— 光标跟随光斑 —— */
+  const CARD_IGNORE = new Set(["cardService"]); // 深色玻璃卡关掉光斑
+  document.querySelectorAll(".card").forEach(card => {
+    const id = card.id;
+    if (CARD_IGNORE.has(id)) return;
+    let raf = null;
+    card.addEventListener("mousemove", (e) => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        const r = card.getBoundingClientRect();
+        card.style.setProperty("--mx", (e.clientX - r.left) + "px");
+        card.style.setProperty("--my", (e.clientY - r.top) + "px");
+        raf = null;
+      });
+    });
+  });
+
+  /* —— 命令面板（Ctrl/Cmd + K） —— */
+  const palette = document.createElement("div");
+  palette.className = "palette";
+  palette.innerHTML = `
+    <div class="palette-box" role="dialog" aria-label="命令面板">
+      <input class="palette-input" type="text" placeholder="输入搜索…  按 Esc 关闭" autofocus autocomplete="off">
+      <div class="palette-list"></div>
+      <div class="palette-footer">
+        <kbd>↑</kbd><kbd>↓</kbd> 选择 · <kbd>Enter</kbd> 跳转 · <kbd>Esc</kbd> 关闭
+      </div>
+    </div>
+  `;
+  document.body.appendChild(palette);
+
+  const pInput = palette.querySelector(".palette-input");
+  const pList = palette.querySelector(".palette-list");
+  let pActive = 0;
+  let pItems = [];
+
+  // 直接从卡片 section 构建跳转项（不再依赖导航 tabs）
+  function buildPaletteItems() {
+    pItems = [];
+    document.querySelectorAll("section.card[id]").forEach(sec => {
+      const href = "#" + sec.id;
+      const title = (sec.querySelector("h2")?.textContent || "").trim();
+      const sub = sec.querySelector(".hint")?.textContent?.trim().slice(0, 40) || "";
+      pItems.push({ href, title, sub, match: (title + " " + sub).toLowerCase() });
+    });
+  }
+
+  function renderPalette(q) {
+    const query = q.trim().toLowerCase();
+    const shown = query
+      ? pItems.filter(it => it.match.includes(query))
+      : pItems;
+    pActive = 0;
+    if (!shown.length) {
+      pList.innerHTML = '<div class="palette-empty">没有匹配的条目</div>';
+      return;
+    }
+    pList.innerHTML = shown.map((it, i) =>
+      `<div class="palette-item${i === 0 ? " active" : ""}" data-href="${it.href}">
+        <span class="pt-title">${it.title}</span>
+        ${it.sub ? `<span class="pt-sub">${it.sub}</span>` : ""}
+      </div>`
+    ).join("");
+  }
+
+  function openPalette() {
+    buildPaletteItems();
+    renderPalette("");
+    palette.classList.add("open");
+    setTimeout(() => pInput.focus(), 50);
+  }
+  function closePalette() {
+    palette.classList.remove("open");
+    pInput.value = "";
+  }
+  function jumpActive() {
+    const item = pList.querySelector(".palette-item.active");
+    if (!item) return closePalette();
+    const href = item.dataset.href;
+    closePalette();
+    const sec = document.querySelector(href);
+    if (sec) sec.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  document.addEventListener("keydown", (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+      e.preventDefault();
+      palette.classList.contains("open") ? closePalette() : openPalette();
+    } else if (palette.classList.contains("open")) {
+      if (e.key === "Escape") { e.preventDefault(); closePalette(); }
+      else if (e.key === "ArrowDown") {
+        e.preventDefault();
+        const items = pList.querySelectorAll(".palette-item");
+        if (!items.length) return;
+        items[pActive]?.classList.remove("active");
+        pActive = (pActive + 1) % items.length;
+        items[pActive].classList.add("active");
+        items[pActive].scrollIntoView({ block: "nearest" });
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        const items = pList.querySelectorAll(".palette-item");
+        if (!items.length) return;
+        items[pActive]?.classList.remove("active");
+        pActive = (pActive - 1 + items.length) % items.length;
+        items[pActive].classList.add("active");
+        items[pActive].scrollIntoView({ block: "nearest" });
+      } else if (e.key === "Enter") {
+        e.preventDefault(); jumpActive();
+      }
+    }
+  });
+
+  pInput.addEventListener("input", () => renderPalette(pInput.value));
+  pList.addEventListener("click", (e) => {
+    const item = e.target.closest(".palette-item");
+    if (!item) return;
+    const href = item.dataset.href;
+    closePalette();
+    const sec = document.querySelector(href);
+    if (sec) sec.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+  palette.addEventListener("click", (e) => {
+    if (e.target === palette) closePalette();
+  });
+})();
+</script>
+</body>
+</html>

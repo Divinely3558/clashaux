@@ -1,0 +1,29 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+*.spec
+
+# Virtual environments
+.venv
+
+# Runtime generated files
+clashaux.json
+basic.json
+backups/
+subscriptions.json
+config.yaml
+metacubexd/
+mihomo
+cache.db
+ruleset/
+
+# 归档的不需要文件
+.text/
+
+# 本地构建与部署脚本（不进版本库）
+build.sh
+deploy.sh

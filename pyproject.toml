@@ -1,0 +1,18 @@
+[project]
+name = "clashaux"
+version = "26.10.27"
+description = "mihomo 辅助管理面板"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.143.0",
+    "httpx>=0.28.1",
+    "python-multipart>=0.0.32",
+    "pyyaml>=6.0.3",
+    "uvicorn>=0.54.0",
+]
+
+[dependency-groups]
+dev = [
+    "pyinstaller>=6.0",
+]
