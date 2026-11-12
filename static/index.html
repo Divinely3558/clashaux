@@ -7,9 +7,19 @@
 <link rel="alternate icon" type="image/png" href="/favicon.png?v=26.10.21">
 <link rel="apple-touch-icon" href="/favicon.png?v=26.10.21">
 <title>clashaux</title>
-<link rel="stylesheet" href="/style.css?v=26.10.27">
+<link rel="stylesheet" href="/style.css?v=26.11.12">
 </head>
 <body>
+<!-- 极光氛围层：4 条渐变光带 + HUD 网格 + 星点 + 扫描线（纯装饰，不参与交互） -->
+<div class="aurora-bg" aria-hidden="true">
+  <span class="aurora-band b1"></span>
+  <span class="aurora-band b2"></span>
+  <span class="aurora-band b3"></span>
+  <span class="aurora-band b4"></span>
+  <span class="aurora-grid"></span>
+  <span class="aurora-stars"></span>
+  <span class="aurora-scan"></span>
+</div>
 <header>
   <div class="brand" id="brandArea" title="面板设置">
     <div class="brand-mark">
@@ -178,7 +188,7 @@
     </div>
     <div id="loginError" style="color:var(--bad);font-size:13px;margin-top:12px;display:none"></div>
     <p style="font-size:12px;color:var(--muted);margin-top:16px">
-      Token 位于 <code style="background:rgba(93,84,164,.1);padding:2px 6px;border-radius:4px">clashaux.json</code> 文件中
+      Token 位于 <code style="background:rgba(34,211,238,.12);color:#a5f3fc;padding:2px 6px;border-radius:4px">clashaux.json</code> 文件中
     </p>
   </div>
 </div>
@@ -191,10 +201,10 @@
     <div class="file-row" style="margin:12px 0">
       <a class="btn primary" href="https://github.com/MetaCubeX/mihomo/releases/latest" target="_blank" rel="noopener" style="text-decoration:none">🔗 打开 mihomo 下载页（GitHub Releases）</a>
     </div>
-    <div style="background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.35);border-radius:8px;padding:12px 14px;margin-bottom:12px">
-      <div style="font-size:13px;font-weight:600;color:#785b12;margin-bottom:6px">📌 安装步骤</div>
+    <div style="background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.3);border-radius:10px;padding:12px 14px;margin-bottom:12px">
+      <div style="font-size:13px;font-weight:600;color:#fcd34d;margin-bottom:6px">📌 安装步骤</div>
       <ol style="color:var(--muted);font-size:13px;margin:0 0 10px;padding-left:20px;line-height:1.9">
-        <li>在下载页选择与自己 CPU 匹配的 <code>.deb</code> 安装包（注意 GOAMD64 档位<span id="blockLevelHint" style="color:#785b12"></span>）</li>
+        <li>在下载页选择与自己 CPU 匹配的 <code>.deb</code> 安装包（注意 GOAMD64 档位<span id="blockLevelHint" style="color:#fcd34d"></span>）</li>
         <li>下载后在终端执行：<code>sudo apt install ./下载的包.deb</code>（或 <code>sudo dpkg -i 下载的包.deb</code>），或直接用下方「上传安装」</li>
         <li>安装完成后点击下方「重新检测」，通过后自动释放 metacubexd 面板并开放登录</li>
       </ol>
