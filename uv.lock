@@ -53,7 +53,7 @@ wheels = [
 
 [[package]]
 name = "clashaux"
-version = "26.11.21"
+version = "26.11.21a"
 source = { virtual = "." }
 dependencies = [
     { name = "fastapi" },
