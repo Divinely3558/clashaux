@@ -1,29 +1,69 @@
-# Python-generated files
+# ===== Python 与构建产物 =====
 __pycache__/
 *.py[oc]
+*.pyz
 build/
 dist/
 wheels/
-*.egg-info
+*.egg-info/
 *.spec
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 
-# Virtual environments
-.venv
+# 虚拟环境
+.venv/
+venv/
+env/
 
-# Runtime generated files
+# ===== 程序运行时生成（含订阅地址、登录 Token、内核配置，绝不上传）=====
 clashaux.json
 basic.json
-backups/
 subscriptions.json
+mihomo-install.json
 config.yaml
-metacubexd/
-mihomo
 cache.db
+*.db
+*.log
+*.pid
+backups/
+metacubexd/
 ruleset/
+mihomo
+*.deb
+*.rpm
+
+# ===== 与项目无关的私人内容（本地脚本、发版产物、发行说明）=====
+.mydata/
+
+# ===== 凭据与密钥（防误提交兜底）=====
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.token
+*.secret
+secrets/
+secrets.*
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub
+
+# ===== 编辑器与系统垃圾 =====
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.bak
+*.tmp
+.DS_Store
+Thumbs.db
 
 # 归档的不需要文件
 .text/
-
-# 本地构建与部署脚本（不进版本库）
-build.sh
-deploy.sh
