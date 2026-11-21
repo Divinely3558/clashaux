@@ -83,15 +83,25 @@ sudo uv run main.py
 
 ### 打包为可执行文件
 
+打包前确认 `assets/` 目录齐全（`metacubexd.tgz`、`geoip.dat`、`geosite.dat`、`country.mmdb`），缺失时 PyInstaller 会直接报错退出。随后在仓库根目录执行：
+
 ```bash
-./build.sh
+uv pip install pyinstaller
+rm -rf build dist clashaux.spec
+uv run pyinstaller --onefile \
+  --add-data "static:static" \
+  --add-data "base.yaml:." \
+  --add-data "assets/metacubexd.tgz:assets" \
+  --add-data "assets/geoip.dat:assets" \
+  --add-data "assets/geosite.dat:assets" \
+  --add-data "assets/country.mmdb:assets" \
+  --add-data "install-service.sh:." \
+  --name clashaux main.py
 ```
 
 生成的可执行文件在 `dist/clashaux`，metacubexd 面板、base.yaml 与 geo 数据（geoip.dat / geosite.dat / country.mmdb）均已内置，单文件即可运行；检测到 mihomo 后自动在其数据目录释放 `metacubexd/` 与 `geoip.dat`/`geosite.dat`/`country.mmdb`，并在程序同目录生成 `base.yaml`。
 
-打包前请确认 `assets/` 目录齐全（`metacubexd.tgz`、`geoip.dat`、`geosite.dat`、`country.mmdb`），缺失时 build.sh 会报错退出。
-
-**ARM / 其它架构请自行打包**：PyInstaller 产物只适配打包它的那台机器，x86-64 上打出的 `dist/clashaux` 拷到 ARM 会直接 `Exec format error`——ARM（arm64 / armv7 / 树莓派 / 香橙派 / Armbian 等）需在目标机器上克隆本仓库、装好 `uv` 后重新执行一次 `./build.sh`，没有可跨架构复用的预编译包。32 位 armv6/armv7 无 PyInstaller 轮子，建议直接 `sudo uv run main.py` 源码运行。
+**ARM / 其它架构请自行打包**：PyInstaller 产物只适配打包它的那台机器，x86-64 上打出的 `dist/clashaux` 拷到 ARM 会直接 `Exec format error`——ARM（arm64 / armv7 / 树莓派 / 香橙派 / Armbian 等）需在目标机器上克隆本仓库、装好 `uv` 后重新执行上面这段命令，没有可跨架构复用的预编译包。32 位 armv6/armv7 无 PyInstaller 轮子，建议直接 `sudo uv run main.py` 源码运行。
 
 面板程序本身与架构无关，档位判定只在 x86-64 上生效；「上传安装 / 内核升级」依赖 `dpkg`/`dpkg-deb`，需 Debian 系发行版（Raspberry Pi OS、Armbian、Ubuntu arm64 等），Arch Linux ARM / Alpine ARM 上自行装好 mihomo 后，面板的检测、配置、订阅与服务控制仍可用。
 
@@ -105,7 +115,7 @@ sudo uv run main.py
 | `base.yaml` | 配置换头的头部模板（不含基础连接设置） |
 | `subscriptions.json` | 已保存的订阅链接 |
 | `mihomo-install.json` | 最近一次通过面板安装/升级的包信息（架构/GOAMD64 档位/版本），供内核升级校验比对（当前档位优先读内核二进制内嵌的编译参数，此文件作兜底）；首次面板内安装或升级后生成 |
-| `assets/` | 打包内置资源目录：`metacubexd.tgz`（面板包）、`geoip.dat` / `geosite.dat` / `country.mmdb`（GeoIP/GeoSite/MMDB 数据源），build.sh 从此目录读取并打进可执行文件，运行时释放到 mihomo 数据目录 |
+| `assets/` | 打包内置资源目录：`metacubexd.tgz`（面板包）、`geoip.dat` / `geosite.dat` / `country.mmdb`（GeoIP/GeoSite/MMDB 数据源），打包时按 `--add-data` 从此目录读取并打进可执行文件，运行时释放到 mihomo 数据目录 |
 | `install-service.sh` | 面板服务管理脚本（打包进可执行文件，启动时释放到程序目录）：安装/启用/取消开机自启、查看状态日志、卸载面板服务、完全卸载（面板 + mihomo + 数据文件，保留可执行文件）；无参数运行进入交互菜单 |
 | `backups/` | 配置备份（最近 5 份） |
 
@@ -113,7 +123,7 @@ sudo uv run main.py
 
 - Linux 系统，mihomo 已由用户自行安装（推荐 deb 包，面板自动识别 systemd 单元中的二进制与 `-d` 数据目录；未安装时面板拒绝登录）
 - 面板需以 root 运行（操作 systemd reload、写入 mihomo 数据目录配置）
-- x86-64 与 ARM 均支持；ARM 机器上的可执行文件需在该机自行 `./build.sh` 打包（见「打包为可执行文件」）
+- x86-64 与 ARM 均支持；ARM 机器上的可执行文件需在该机按「打包为可执行文件」一节的命令自行打包
 
 ## 技术栈
 
@@ -130,6 +140,7 @@ sudo uv run main.py
 
 - 版本号推进一个字母后缀，用于验证 GitHub 与 Gitee 双平台发布流程；程序功能与 v26.11.21 相同
 - 仓库忽略规则收敛：私有脚本与发版产物统一放 `.mydata/`（不随仓库分发、不进版本库），并补齐运行时数据（订阅地址、登录令牌、内核配置、缓存库）与凭据文件的兜底忽略项
+- 文档：打包说明改为直接给出 PyInstaller 命令，不再引用未随仓库分发的本地构建脚本，外部按 README 即可在 ARM 机器上自行打包
 
 ### v26.11.21
 
