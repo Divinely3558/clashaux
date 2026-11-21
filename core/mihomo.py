@@ -110,12 +110,14 @@ def detect() -> dict:
     bin_path = detect_bin()
     ver = _version(bin_path)
     installed = bool(bin_path) and bool(ver)
+    adv = package_advice(installed)
     result = {
         "installed": installed,
         "version": ver,
         "bin": bin_path,
         "home": str(home()),
-        "level": goamd64_level(),
+        "level": adv["level"],
+        "advice": adv,
     }
     _detect_cache = (now, result)
     return result
@@ -125,24 +127,6 @@ def invalidate_detect_cache() -> None:
     """安装/卸载 mihomo 后调用，避免 detect() 返回过期结果。"""
     global _detect_cache
     _detect_cache = None
-
-
-def goamd64_level() -> str:
-    """根据 CPU 指令集判断可用的最高 GOAMD64 档位（供用户自行下载安装包时参考）。"""
-    try:
-        flags = set(
-            re.findall(
-                r"\b(avx2|avx|bmi2|sse4_2|popcnt)\b",
-                Path("/proc/cpuinfo").read_text(encoding="utf-8", errors="ignore"),
-            )
-        )
-    except OSError:
-        return "v1"
-    if {"avx2", "bmi2"} <= flags:
-        return "v3"
-    if {"sse4_2", "popcnt"} <= flags:
-        return "v2"
-    return "v1"
 
 
 def dashboard_dir() -> Path:
@@ -225,11 +209,28 @@ GZ_UNIT_FILE = Path("/usr/lib/systemd/system/mihomo.service")
 # ---------- 安装包元数据（记录最近一次安装的 架构/GOAMD64 档位，供升级校验用） ----------
 INSTALL_META_FILE = DATA_DIR / "mihomo-install.json"
 
-_ARCH_MAP = {"x86_64": "amd64", "amd64": "amd64", "aarch64": "arm64", "arm64": "arm64"}
+_ARCH_MAP = {
+    "x86_64": "amd64", "amd64": "amd64", "aarch64": "arm64", "arm64": "arm64",
+    "i386": "386", "i486": "386", "i586": "386", "i686": "386", "386": "386",
+    "armv5tel": "armv5", "armv5": "armv5", "armv6l": "armv6", "armv6": "armv6",
+    "armv7l": "armv7", "armv7": "armv7", "loongarch64": "loong64", "loong64": "loong64",
+    "mips64": "mips64", "mips": "mips", "ppc64le": "ppc64le", "riscv64": "riscv64",
+    "s390x": "s390x",
+}
+
+# 官方发布资源后缀（长的在前，确保 .pkg.tar.zst 不被 .zst 之类截断）
+_ASSET_EXTS = (".pkg.tar.zst", ".tar.gz", ".tgz", ".deb", ".rpm", ".zip", ".gz")
+# 文件名中的 GOOS 段（mihomo-<os>-<arch>-…），面板只管理 Linux 内核
+_ASSET_OS = ("linux", "darwin", "windows", "freebsd", "android", "ios")
+# 文件名中的 GOARCH 段（长的在前，避免 mips64le 被 mips 抢先匹配）
+_ASSET_ARCH_RE = re.compile(
+    r"-(x86_64|amd64|aarch64|arm64|armv5|armv6|armv7|386|loong64"
+    r"|mips64le|mips64|mipsle|mips|ppc64le|riscv64|s390x)(?:-|$)"
+)
 
 
 def normalize_arch(machine: str) -> str:
-    """归一化架构名：x86_64→amd64、aarch64→arm64。"""
+    """归一化架构名：x86_64→amd64、aarch64→arm64、i686→386、loongarch64→loong64 等。"""
     m = (machine or "").lower()
     return _ARCH_MAP.get(m, m)
 
@@ -239,23 +240,195 @@ def host_arch() -> str:
     return normalize_arch(platform.machine())
 
 
-def parse_asset_name(name: str) -> dict:
-    """从 mihomo 发布包文件名解析 架构 / GOAMD64 档位 / 版本号。
+# GOAMD64 各档位在 v1 基础上额外要求的 x86-64 指令集（与 Go 官方档位定义一致）
+_GOAMD64_V2_FLAGS = ("sse4_2", "popcnt", "cx16", "movbe")
+_GOAMD64_V3_FLAGS = ("avx", "avx2", "bmi1", "bmi2", "fma", "osxsave")
+_LEVELS = ("v1", "v2", "v3")
 
-    形如 mihomo-linux-amd64-v3-v1.19.32.deb、mihomo-linux-arm64-v1.19.32.gz；
-    compatible 视为 v1；arm64 无档位概念（level 为空串）。解析不出的字段返回空串。
+
+def cpu_flags() -> set[str]:
+    """本机 CPU 指令集标志（/proc/cpuinfo 的 flags/features 行，读不到返回空集）。"""
+    try:
+        text = Path("/proc/cpuinfo").read_text(encoding="utf-8", errors="ignore")
+    except OSError:
+        return set()
+    flags: set[str] = set()
+    for line in text.splitlines():
+        key, _, value = line.partition(":")
+        if key.strip().lower() in ("flags", "features"):
+            flags.update(value.split())
+    return flags
+
+
+def goamd64_level() -> str:
+    """本机 CPU 可运行的最高 GOAMD64 档位（v1/v2/v3）；非 amd64 或读不到指令集返回空串。"""
+    if host_arch() != "amd64":
+        return ""
+    flags = cpu_flags()
+    if not flags:
+        return ""
+    if set(_GOAMD64_V2_FLAGS) <= flags and set(_GOAMD64_V3_FLAGS) <= flags:
+        return "v3"
+    if set(_GOAMD64_V2_FLAGS) <= flags:
+        return "v2"
+    return "v1"
+
+
+def level_rank(level: str) -> int:
+    """档位高低排序值（未知档位按最低的 v1 处理）。"""
+    return _LEVELS.index(level) if level in _LEVELS else 0
+
+
+# Go 二进制内嵌的编译参数（debug/buildinfo）带有 GOAMD64=vN，比文件名更可信
+_GOAMD64_RE = re.compile(rb"GOAMD64=(v\d+)")
+_bin_level_cache: dict[str, tuple[str, str]] = {}
+
+
+def binary_goamd64(data: bytes) -> str:
+    """从 Go 二进制内嵌编译参数中读取 GOAMD64 档位（读不出返回空串）。"""
+    m = _GOAMD64_RE.search(data)
+    return m.group(1).decode() if m else ""
+
+
+def file_goamd64(path: Path) -> str:
+    """读取本机二进制的 GOAMD64，按 修改时间+大小 缓存（避免每次检测重复读几十 MB）。"""
+    try:
+        st = path.stat()
+    except OSError:
+        return ""
+    key = f"{st.st_mtime_ns}|{st.st_size}"
+    cached = _bin_level_cache.get(str(path))
+    if cached and cached[0] == key:
+        return cached[1]
+    try:
+        level = binary_goamd64(path.read_bytes())
+    except OSError:
+        level = ""
+    _bin_level_cache[str(path)] = (key, level)
+    return level
+
+
+def installed_goamd64() -> str:
+    """当前已安装内核编译时的 GOAMD64 档位（升级必须保持同档位）。"""
+    bin_path = detect_bin()
+    return file_goamd64(Path(bin_path)) if bin_path else ""
+
+
+def deb_binary(deb: Path) -> bytes:
+    """解出 .deb 内的 mihomo 二进制内容（取解包后的第一个 ELF），失败返回空字节。"""
+    with tempfile.TemporaryDirectory(prefix="mihomo-deb-") as td:
+        rc, _ = run_cmd(["dpkg-deb", "-x", str(deb), td], timeout=180, silent=True)
+        if rc != 0:
+            return b""
+        for p in sorted(Path(td).rglob("*")):
+            if not p.is_file():
+                continue
+            try:
+                with p.open("rb") as f:
+                    if f.read(4) != b"\x7fELF":
+                        continue
+                return p.read_bytes()
+            except OSError:
+                return b""
+        return b""
+
+
+def package_goamd64(path: Path, orig_name: str = "") -> str:
+    """探测上传包内二进制的 GOAMD64：.gz 解压读字节，.deb 解包读二进制；读不出返回空串。"""
+    suffix = path.suffix.lower()
+    if suffix == ".gz":
+        try:
+            return binary_goamd64(gzip.decompress(path.read_bytes()))
+        except (OSError, EOFError):
+            return ""
+    if suffix == ".deb":
+        return binary_goamd64(deb_binary(path))
+    return ""
+
+
+def package_pattern(arch: str, level: str = "", ext: str = ".deb") -> str:
+    """应下载的安装包文件名形式，如 mihomo-linux-amd64-v3-*.deb。
+
+    arm64 等无档位架构不带动位段；amd64 档位无法判定时用 v1/v2/v3 占位。
+    """
+    hint = level or ("v1/v2/v3" if arch == "amd64" else "")
+    return f"mihomo-linux-{arch}" + (f"-{hint}" if hint else "") + "-*" + ext
+
+
+def package_advice(installed: bool) -> dict:
+    """给出本机应选的安装包档位建议（首次安装与升级弹窗共用）。
+
+    未安装时应选档位为本机 CPU 支持的上限；已安装时升级必须保持当前档位
+    （档位只能靠卸载重装更换），当前档位以内核二进制内嵌的 GOAMD64 为准，
+    读不出时依次回退安装记录、CPU 上限。
+    """
+    meta = install_meta()
+    arch = host_arch()
+    cpu_level = goamd64_level() if arch == "amd64" else ""
+    cur_level = ""
+    if installed and arch == "amd64":
+        cur_level = installed_goamd64() or meta.get("goamd64") or cpu_level
+    level = cur_level or cpu_level
+    return {
+        "arch": arch,
+        "cpu_level": cpu_level,
+        "cur_level": cur_level,
+        "level": level,
+        "pattern": package_pattern(arch, level),
+        "locked": bool(cur_level),  # 已安装且档位已知：升级不得换档
+    }
+
+
+def check_package_fit(path: Path, orig_name: str = "",
+                      pkg_level: str | None = None) -> str:
+    """校验上传包能否用于本机：平台需为 linux、架构需一致、GOAMD64 档位不得超出本机 CPU 上限。
+
+    档位优先取包内二进制内嵌的编译参数（被改名的包同样有效），读不出时回退文件名；
+    返回拒绝原因，空串表示通过，本机 CPU 档位无法判定时不拦截。
+    """
+    info = parse_asset_name(orig_name)
+    arch = host_arch()
+    if info["os"] and info["os"] != "linux":
+        return (f"平台不符：安装包为 {info['os']}，本面板只管理 Linux 上的 mihomo，"
+                f"请下载 {package_pattern(arch, goamd64_level())}")
+    if info["arch"] and info["arch"] != arch:
+        return (f"架构不符：安装包为 {info['arch']}，本机为 {arch}，"
+                f"请下载 {package_pattern(arch, goamd64_level())}")
+    cpu_level = goamd64_level()
+    if not cpu_level:
+        return ""
+    if pkg_level is None:
+        pkg_level = info["level"] or package_goamd64(path, orig_name)
+    if level_rank(pkg_level) > level_rank(cpu_level):
+        return (f"GOAMD64 档位超出本机 CPU 支持：安装包为 {pkg_level}，"
+                f"本机最高 {cpu_level}，请下载 {package_pattern(arch, cpu_level)}")
+    return ""
+
+
+def parse_asset_name(name: str) -> dict:
+    """从 mihomo 发布包文件名解析 平台 / 架构 / GOAMD64 档位 / 版本号。
+
+    覆盖官方全部资源命名，如 mihomo-linux-amd64-v3-v1.19.34.deb、
+    mihomo-linux-amd64-v2-go124-v1.19.34.gz（go1xx 为 Go 工具链变体，忽略）、
+    mihomo-linux-amd64-compatible-v1.19.34.gz（compatible 视为 v1）、
+    mihomo-linux-armv7-v1.19.34.deb、mihomo-linux-loong64-abi1-v1.19.34.rpm、
+    mihomo-linux-mipsle-hardfloat-v1.19.34.gz、mihomo-darwin-arm64-v1.19.34.gz 等；
+    非 amd64 架构无档位概念（level 为空串），解析不出的字段同样返回空串。
     """
     stem = Path(name).name
-    for ext in (".deb", ".gz", ".tgz", ".zip"):
+    for ext in _ASSET_EXTS:
         if stem.lower().endswith(ext):
             stem = stem[: -len(ext)]
             break
-    result = {"arch": "", "level": "", "version": ""}
+    result = {"os": "", "arch": "", "level": "", "version": ""}
     m = re.search(r"(?:^|-)(v\d+(?:\.\d+)+)$", stem)
     if m:
         result["version"] = m.group(1).lstrip("v")
         stem = stem[: m.start(1)].rstrip("-")
-    m = re.search(r"-(amd64|x86_64|arm64|aarch64)(?:-|$)", stem)
+    m = re.match(r"^[a-z]+-([a-z]+)-", stem.lower())
+    if m and m.group(1) in _ASSET_OS:
+        result["os"] = m.group(1)
+    m = re.search(_ASSET_ARCH_RE, stem)
     if m:
         result["arch"] = normalize_arch(m.group(1))
         m2 = re.match(r"(v[123]|compatible)(?:-|$)", stem[m.end():])
@@ -371,7 +544,8 @@ def install_deb(deb: Path, orig_name: str = "") -> dict:
         return {"ok": False,
                 "error": "dpkg 执行成功，但未检测到 mihomo，请确认上传的是 mihomo 的 deb 包"}
     info = parse_asset_name(orig_name)
-    record_install_meta(arch=info["arch"], level=info["level"],
+    record_install_meta(arch=info["arch"] or host_arch(),
+                        level=installed_goamd64() or info["level"],
                         version=d["version"], method="deb")
     return {"ok": True, "message": f"mihomo v{d['version']} 安装成功",
             "version": d["version"]}
@@ -384,13 +558,13 @@ def install_gz(gz: Path, orig_name: str = "") -> dict:
     if rc == 0:
         return {"ok": False,
                 "error": "检测到 mihomo 已通过 deb 包安装，请改用 .deb 上传安装（或先 sudo apt remove mihomo）"}
+    want = package_pattern(host_arch(), goamd64_level(), ".gz")
     try:
         raw = gzip.decompress(gz.read_bytes())
     except (OSError, EOFError) as e:
-        return {"ok": False, "error": f"解压失败（请上传 mihomo-linux-amd64-*.gz）: {e}"}
+        return {"ok": False, "error": f"解压失败（请上传 {want}）: {e}"}
     if not raw.startswith(b"\x7fELF"):
-        return {"ok": False,
-                "error": "解压后不是有效的 ELF 可执行文件，请上传 mihomo-linux-amd64-*.gz"}
+        return {"ok": False, "error": f"解压后不是有效的 ELF 可执行文件，请上传 {want}"}
     tmp = None
     try:
         GZ_BIN_TARGET.parent.mkdir(parents=True, exist_ok=True)
@@ -422,14 +596,19 @@ def install_gz(gz: Path, orig_name: str = "") -> dict:
             return {"ok": False, "error": f"写入 systemd 单元失败: {e}"}
     invalidate_detect_cache()  # 清缓存，确保后续 detect() 拿到安装后的真实状态
     info = parse_asset_name(orig_name)
-    record_install_meta(arch=info["arch"], level=info["level"],
+    record_install_meta(arch=info["arch"] or host_arch(),
+                        level=binary_goamd64(raw) or info["level"],
                         version=ver, method="gz")
     return {"ok": True, "message": f"mihomo v{ver} 安装成功（{GZ_BIN_TARGET}）",
             "version": ver}
 
 
-def install_from_upload(path: Path, orig_name: str = "") -> dict:
+def install_from_upload(path: Path, orig_name: str = "",
+                        pkg_level: str | None = None) -> dict:
     """按后缀分发安装上传的 .deb / .gz 包（orig_name 用于解析架构/档位）。"""
+    err = check_package_fit(path, orig_name, pkg_level)
+    if err:
+        return {"ok": False, "error": err}
     suffix = path.suffix.lower()
     if suffix == ".deb":
         return install_deb(path, orig_name)

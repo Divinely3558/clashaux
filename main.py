@@ -175,7 +175,7 @@ async def api_login(body: TextBody):
     if not d["installed"]:
         return {"ok": False, "blocked": True,
                 "error": "你未安装 mihomo，请先自行安装后再登录",
-                "level": d["level"]}
+                "level": d["level"], "advice": d["advice"]}
     if secrets.compare_digest(body.text.encode("utf-8"), TOKEN.encode("utf-8")):
         return {"ok": True, "token": TOKEN}
     return {"ok": False, "error": "token 错误"}
@@ -277,7 +277,9 @@ async def api_mihomo_upgrade(file: UploadFile, token: str = Form("")):
     """上传更高版本的 mihomo 安装包执行升级。
 
     安装前校验全部通过才执行：新版本必须高于当前版本（语义化比较）、
-    GOAMD64 档位相同（v1→v1/v2→v2/v3→v3）、CPU 架构相同（amd64/arm64）。
+    GOAMD64 档位与当前内核一致、平台与 CPU 架构相同。档位与架构优先读自包内
+    二进制内嵌的编译参数（官方 go1xx / compatible / 无档位标识的包以及被
+    改名的包同样能识别），读不出时回退文件名解析。
     """
     if not secrets.compare_digest(token.encode("utf-8"), TOKEN.encode("utf-8")):
         return {"ok": False, "error": "token 错误"}
@@ -285,15 +287,18 @@ async def api_mihomo_upgrade(file: UploadFile, token: str = Form("")):
     if not name.lower().endswith((".deb", ".gz")):
         return {"ok": False, "error": "仅支持 .deb 或 .gz 升级包"}
     info = mihomo.parse_asset_name(name)
-    if not info["arch"]:
+    if info["os"] and info["os"] != "linux":
         return {"ok": False, "error":
-                "无法从文件名识别 CPU 架构，文件名需形如 mihomo-linux-amd64-v3-v1.19.32.deb"}
-    if info["arch"] == "amd64" and not info["level"]:
-        return {"ok": False, "error":
-                "无法从文件名识别 GOAMD64 档位，请下载带 v1/v2/v3（或 compatible）标识的安装包"}
+                f"平台不符：新包为 {info['os']}，本面板只管理 Linux 上的 mihomo，"
+                f"请下载 mihomo-linux-… 安装包"}
     cur = await asyncio.to_thread(mihomo.detect)
     if not cur["installed"]:
         return {"ok": False, "error": "当前未安装 mihomo，无法升级"}
+    adv = cur["advice"]
+    if info["arch"] and info["arch"] != adv["arch"]:
+        return {"ok": False, "error":
+                f"架构不符：新包 {info['arch']}，本机为 {adv['arch']}（不支持跨架构升级），"
+                f"请下载 {adv['pattern']}"}
     data = await file.read()
     if not data:
         return {"ok": False, "error": "上传文件为空"}
@@ -307,16 +312,20 @@ async def api_mihomo_upgrade(file: UploadFile, token: str = Form("")):
         if not mihomo.version_newer(new_ver, cur["version"]):
             return {"ok": False, "error":
                     f"新包 v{new_ver} 不高于当前版本 v{cur['version']}，无需升级"}
-        meta = mihomo.install_meta()
-        cur_arch = meta.get("arch") or mihomo.host_arch()
-        cur_level = meta.get("goamd64") or cur["level"]
-        if info["arch"] != cur_arch:
-            return {"ok": False, "error":
-                    f"架构不符：新包 {info['arch']}，当前安装 {cur_arch}（不支持跨架构升级）"}
-        if info["arch"] == "amd64" and info["level"] != cur_level:
-            return {"ok": False, "error":
-                    f"GOAMD64 档位不符：新包 {info['level']}，当前 {cur_level}（必须同档位升级）"}
-        r = await asyncio.to_thread(mihomo.install_from_upload, tmp, name)
+        # 档位只对 amd64 有意义：非 amd64 不解析档位，也就不必读包内二进制
+        pkg_level = info["level"]
+        if adv["arch"] == "amd64":
+            pkg_level = await asyncio.to_thread(mihomo.package_goamd64, tmp, name) or pkg_level
+            if adv["cur_level"]:
+                if not pkg_level:
+                    return {"ok": False, "error":
+                            f"无法确定新包的 GOAMD64 档位（包内未读到编译参数），请下载 {adv['pattern']}"}
+                if pkg_level != adv["cur_level"]:
+                    return {"ok": False, "error":
+                            f"GOAMD64 档位不符：新包 {pkg_level}，当前安装 {adv['cur_level']}"
+                            f"（升级须保持同档位，请下载 {adv['pattern']}；"
+                            f"本机 CPU 最高支持 {adv['cpu_level'] or '未知'}，换档需卸载后重新安装）"}
+        r = await asyncio.to_thread(mihomo.install_from_upload, tmp, name, pkg_level)
     finally:
         tmp.unlink(missing_ok=True)
     if r.get("ok"):

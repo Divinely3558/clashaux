@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=26.11.12">
-<link rel="alternate icon" type="image/png" href="/favicon.png?v=26.11.12">
-<link rel="apple-touch-icon" href="/favicon.png?v=26.11.12">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=26.11.21">
+<link rel="alternate icon" type="image/png" href="/favicon.png?v=26.11.21">
+<link rel="apple-touch-icon" href="/favicon.png?v=26.11.21">
 <title>clashaux</title>
-<link rel="stylesheet" href="/style.css?v=26.11.12">
+<link rel="stylesheet" href="/style.css?v=26.11.21">
 </head>
 <body>
 <!-- 极光氛围层：4 条渐变光带 + HUD 网格 + 星点 + 扫描线（纯装饰，不参与交互） -->
@@ -42,12 +42,13 @@
         <h2>控制台</h2>
         <p>管理服务状态、代理配置与订阅</p>
       </div>
+      <span class="ver-chip" id="appVer" title="clashaux 版本"></span>
     </div>
 
     <div class="col-2">
       <div class="stack">
       <section class="card service" id="cardService">
-        <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="8" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/></svg>服务控制<button class="btn panel-link" id="btnPanel">打开面板 <span aria-hidden="true">↗</span></button></h2>
+        <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="8" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/></svg>服务控制<button class="btn panel-link" id="btnPanel" title="在新标签页打开 metacubexd，跳转时自动带上当前密钥，免输密码登录">打开面板 <span aria-hidden="true">↗</span></button></h2>
         <div class="tiles">
           <div class="tile"><div class="label">开机自启</div><div class="num small" id="pEnabled"><span class="sk"></span></div></div>
           <div class="tile"><div class="label">主进程 PID</div><div class="num" id="pPid"><span class="sk"></span></div></div>
@@ -201,16 +202,21 @@
     <div class="file-row" style="margin:12px 0">
       <a class="btn primary" href="https://github.com/MetaCubeX/mihomo/releases/latest" target="_blank" rel="noopener" style="text-decoration:none">🔗 打开 mihomo 下载页（GitHub Releases）</a>
     </div>
+    <div style="background:rgba(34,211,238,.07);border:1px solid rgba(34,211,238,.25);border-radius:10px;padding:12px 14px;margin-bottom:12px">
+      <div style="font-size:13px;font-weight:600;color:#a5f3fc;margin-bottom:8px">🎯 本机适配建议</div>
+      <dl class="kv" id="installAdvice" style="margin:0"><dt>档位建议</dt><dd>检测中…</dd></dl>
+      <div id="installAdviceNote" style="font-size:12px;color:var(--muted);line-height:1.7;margin-top:6px"></div>
+    </div>
     <div style="background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.3);border-radius:10px;padding:12px 14px;margin-bottom:12px">
       <div style="font-size:13px;font-weight:600;color:#fcd34d;margin-bottom:6px">📌 安装步骤</div>
       <ol style="color:var(--muted);font-size:13px;margin:0 0 10px;padding-left:20px;line-height:1.9">
-        <li>在下载页选择与自己 CPU 匹配的 <code>.deb</code> 安装包（注意 GOAMD64 档位<span id="blockLevelHint" style="color:#fcd34d"></span>）</li>
+        <li>在下载页选 <code>linux</code> + 本机架构 + 上方建议档位的 <code>.deb</code>（列表里的 <code>go120/go122/go124</code>、<code>compatible</code> 为 Go 工具链与兼容变体，非 Linux 平台的包本面板不支持）</li>
         <li>下载后在终端执行：<code>sudo apt install ./下载的包.deb</code>（或 <code>sudo dpkg -i 下载的包.deb</code>），或直接用下方「上传安装」</li>
         <li>安装完成后点击下方「重新检测」，通过后自动释放 metacubexd 面板并开放登录</li>
       </ol>
       <div style="font-size:12px;color:var(--muted);line-height:1.7;border-top:1px solid rgba(251,191,36,.25);padding-top:8px">
-        <b>v3</b> · 2013 年后的普通 PC / 笔记本（Intel 4 代后、AMD 锐龙），需 AVX2<br>
-        <b>v2</b> · 2008~2013 年老电脑、老服务器，需 SSE4.2 / POPCNT<br>
+        <b>v3</b> · 2013 年后的普通 PC / 笔记本（Intel 4 代后、AMD 锐龙），需 AVX / AVX2 / BMI1 / BMI2 / FMA<br>
+        <b>v2</b> · 2008~2013 年老电脑、老服务器，需 SSE4.2 / POPCNT / CX16 / MOVBE<br>
         <b>v1</b> · 很老的 CPU（J1900、G1840、初代至强等），任意 x86-64，最稳
       </div>
     </div>
@@ -221,6 +227,7 @@
         <label class="btn">选择安装包<input type="file" id="blockFile" accept=".deb,.gz" hidden></label>
         <span class="file-name" id="blockFileName">未选择文件</span>
       </div>
+      <div class="file-name" id="blockPkgHint" style="display:none;margin:-4px 0 10px"></div>
       <input type="password" id="blockToken" class="input" style="width:100%;margin-bottom:10px" placeholder="输入面板 Token 确认安装">
       <div class="modal-actions" style="margin-bottom:2px">
         <button class="btn primary" id="btnBlockUpload" disabled>上传并安装</button>
@@ -231,15 +238,22 @@
   </div>
 </div>
 
-<!-- mihomo 升级弹窗（校验：版本必须更高、同 GOAMD64 档位、同架构） -->
+<!-- mihomo 升级弹窗（校验：版本必须更高、同 GOAMD64 档位、linux 平台与本机架构一致） -->
 <div id="upgradeModal" class="modal" style="display:none">
   <div class="modal-content" style="max-width:600px;max-height:92vh;overflow:auto">
     <h3>升级 mihomo 内核</h3>
-    <p>上传更高版本的安装包（.deb / .gz），面板安装前会先校验：<b>新版本必须高于当前版本</b>、<b>GOAMD64 档位相同</b>（v1→v1、v2→v2、v3→v3）、<b>CPU 架构相同</b>（amd64 / arm64），任一不符都会拒绝安装。</p>
-    <div class="file-row" style="flex-wrap:wrap;gap:8px;margin-bottom:10px">
+    <p>上传更高版本的安装包（.deb / .gz），面板安装前会先校验：<b>新版本必须高于当前版本</b>、<b>GOAMD64 档位与当前内核相同</b>（v1→v1、v2→v2、v3→v3）、<b>平台为 linux 且 CPU 架构与本机相同</b>，任一不符都会拒绝安装。档位按包内二进制记录的编译参数判定，改过名或文件名不带档位（如 go122、compatible 变体）的包同样能识别。</p>
+    <div style="background:rgba(34,211,238,.07);border:1px solid rgba(34,211,238,.25);border-radius:10px;padding:12px 14px;margin-bottom:12px">
+      <div style="font-size:13px;font-weight:600;color:#a5f3fc;margin-bottom:8px">🎯 本机适配建议</div>
+      <dl class="kv" id="upAdvice" style="margin:0"><dt>档位建议</dt><dd>检测中…</dd></dl>
+      <div id="upAdviceNote" style="font-size:12px;color:var(--muted);line-height:1.7;margin-top:6px"></div>
+    </div>
+    <div class="file-row" style="flex-wrap:wrap;gap:8px;margin-bottom:6px">
       <label class="btn">选择升级包<input type="file" id="upFile" accept=".deb,.gz" hidden></label>
       <span class="file-name" id="upFileName">未选择文件</span>
+      <a class="btn" href="https://github.com/MetaCubeX/mihomo/releases/latest" target="_blank" rel="noopener" style="text-decoration:none">🔗 下载页</a>
     </div>
+    <div class="file-name" id="upPkgHint" style="display:none;margin-bottom:10px"></div>
     <input type="password" id="upToken" class="input" style="width:100%;margin-bottom:10px" placeholder="输入面板 Token 确认升级">
     <div class="modal-actions" style="margin-bottom:2px">
       <button class="btn primary" id="btnUpgradeUpload" disabled>上传并升级</button>
@@ -253,6 +267,10 @@
 const $ = id => document.getElementById(id);
 const fmtSize = n => n > 1048576 ? (n / 1048576).toFixed(1) + " MB" : (n / 1024).toFixed(1) + " KB";
 function esc(s) { const d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+
+// 版本号复用 head 里 style.css 的 ?v= 缓存串，免得版本号再多一处要手工同步
+const appVer = document.querySelector('link[href*="style.css"]')?.href.match(/[?&]v=([^&]+)/)?.[1];
+if (appVer) $("appVer").textContent = "v" + appVer;
 
 let authToken = localStorage.getItem("clashaux_token") || "";
 
@@ -399,7 +417,7 @@ $("btnLogin").onclick = async () => {
       await afterAuth();
     } else if (d.blocked) {
       // 未安装 mihomo：阻断登录，显示安装指引
-      showBlock(d.level);
+      showBlock(d);
     } else {
       loginError.textContent = d.error || "token 错误";
       loginError.style.display = "block";
@@ -600,7 +618,13 @@ $("btnPanel").onclick = () => {
     const p = String(basicOriginal["external-controller"]).split(":").pop();
     if (/^\d+$/.test(p)) port = p;
   }
-  window.open("http://" + window.location.hostname + ":" + port + "/ui/", "_blank");
+  const sec = basicOriginal ? String(basicOriginal["secret"] || "").trim() : "";
+  // metacubexd 的 #/setup 页支持 hostname/port/secret 跳转参数，连上后自动 replace 到 /overview；
+  // 参数写在 hash 里：不随请求发给内核，跳转后也会被路由替换，密钥只存在于这一次点击的 URL 中
+  const host = window.location.hostname;
+  const q = "hostname=" + encodeURIComponent(host) + "&port=" + port +
+    (sec ? "&secret=" + encodeURIComponent(sec) : "");
+  window.open("http://" + host + ":" + port + "/ui/#/setup?" + q, "_blank");
 };
 
 /* ---------- 配置更新 ---------- */
@@ -957,12 +981,116 @@ async function refreshSubs() {
   } catch (e) { /* 静默 */ }
 }
 
+/* ---------- 安装包档位建议（首次安装 / 升级弹窗共用） ---------- */
+const LEVEL_RANK = { v1: 1, v2: 2, v3: 3 };
+
+// 与后端 parse_asset_name 同规则：从发布包文件名解析平台、架构与 GOAMD64 档位
+const PKG_EXT_RE = /(\.pkg\.tar\.zst|\.tar\.gz|\.tgz|\.deb|\.rpm|\.zip|\.gz)$/i;
+const PKG_ARCH_RE = /-(x86_64|amd64|aarch64|arm64|armv5|armv6|armv7|386|loong64|mips64le|mips64|mipsle|mips|ppc64le|riscv64|s390x)(?:-|$)/i;
+const PKG_ARCH_MAP = { x86_64: "amd64", aarch64: "arm64" };
+const PKG_OS = ["linux", "darwin", "windows", "freebsd", "android", "ios"];
+
+function parsePkgName(name) {
+  let stem = name.replace(PKG_EXT_RE, "");
+  const out = { os: "", arch: "", level: "" };
+  const vm = stem.match(/(?:^|-)v\d+(?:\.\d+)+$/);
+  if (vm) stem = stem.slice(0, vm.index).replace(/-$/, "");
+  const om = stem.toLowerCase().match(/^([a-z]+)-([a-z]+)-/);
+  if (om && PKG_OS.includes(om[2])) out.os = om[2];
+  const am = stem.match(PKG_ARCH_RE);
+  if (!am) return out;
+  const raw = am[1].toLowerCase();
+  out.arch = PKG_ARCH_MAP[raw] || raw;
+  const lm = stem.slice(am.index + am[0].length).match(/^(v[123]|compatible)(?:-|$)/);
+  if (lm) out.level = lm[1] === "compatible" ? "v1" : lm[1];
+  return out;
+}
+
+const adviceRows = pairs => pairs.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v || "–")}</dd>`).join("");
+
+function renderInstallAdvice(a) {
+  const box = $("installAdvice"), note = $("installAdviceNote");
+  if (!a) {
+    box.innerHTML = adviceRows([["档位建议", "本机信息获取失败"]]);
+    note.textContent = "无法读取本机 CPU 指令集，请按下方对照表自行选择档位；不确定时选 v1。";
+    return;
+  }
+  if (a.arch !== "amd64") {
+    box.innerHTML = adviceRows([["本机架构", a.arch], ["应选安装包", a.pattern]]);
+    note.textContent = "非 x86-64 架构没有 GOAMD64 档位之分，选架构匹配的包即可。";
+    return;
+  }
+  box.innerHTML = adviceRows([["本机架构", a.arch], ["CPU 最高档位", a.cpu_level], ["应选安装包", a.pattern]]);
+  const variant = "官方发布包还有 go120、compatible 等命名变体，面板会读包内二进制的 GOAMD64 编译参数核对档位。";
+  note.textContent = a.cpu_level
+    ? `选文件名含 -${a.level} 的包即可；档位越高性能越好，不确定时选 v1（任意 x86-64 均可运行）。${variant}`
+    : `未能从 /proc/cpuinfo 判定档位，请按下方对照表自行选择；不确定时选 v1。${variant}`;
+}
+
+function renderUpgradeAdvice(a) {
+  const box = $("upAdvice"), note = $("upAdviceNote");
+  if (!a) {
+    box.innerHTML = adviceRows([["档位建议", "本机信息获取失败"]]);
+    note.textContent = "无法读取本机 CPU 指令集，请按「档位与当前安装一致」的原则选包。";
+    return;
+  }
+  if (a.arch !== "amd64") {
+    box.innerHTML = adviceRows([["本机架构", a.arch], ["应选升级包", a.pattern]]);
+    note.textContent = "非 x86-64 架构没有 GOAMD64 档位之分，架构与当前安装一致即可。";
+    return;
+  }
+  box.innerHTML = adviceRows([["当前档位", a.cur_level || "未知"], ["CPU 最高档位", a.cpu_level], ["应选升级包", a.pattern]]);
+  const probe = "档位取自当前内核二进制的 GOAMD64 编译参数，上传的升级包也会按包内实际档位核对（改过名、无档位标识的包同样识别）。";
+  if (!a.cur_level)
+    note.textContent = "未能读取到当前内核的 GOAMD64 档位，请对照内核安装记录选同档位包；面板仍会按上传包内二进制的编译参数核对，档位读不出时拒绝升级。";
+  else if (a.cpu_level && LEVEL_RANK[a.cpu_level] > LEVEL_RANK[a.cur_level])
+    note.textContent = `升级包必须与当前档位 ${a.cur_level} 相同；本机 CPU 支持更高档位 ${a.cpu_level}，想换档需先卸载内核，再用 ${a.arch === "amd64" ? `mihomo-linux-${a.arch}-${a.cpu_level}-*.deb` : `mihomo-linux-${a.arch}-*.deb`} 重装。${probe}`;
+  else
+    note.textContent = `升级包必须与当前档位 ${a.cur_level} 相同（换档需卸载后重装）。${probe}`;
+}
+
+// 选包后即时判断档位/架构是否合适，最终仍以安装前的后端校验为准
+function pkgFit(name, a, upgrade) {
+  if (!a) return null;
+  const p = parsePkgName(name);
+  if (p.os && p.os !== "linux")
+    return { ok: false, text: `平台不符：所选包为 ${p.os}，面板只管理 Linux 上的 mihomo，应下载 ${a.pattern}` };
+  if (/\.(rpm|zip|pkg\.tar\.zst|msi|exe|apk|skw|ipk)$/i.test(name))
+    return { ok: false, text: "官方另有 rpm / pkg.tar.zst / zip 等格式，但面板仅支持 .deb 与 .gz 安装包；其余格式请用系统包管理器安装" };
+  if (!p.arch) return { ok: null, text: "文件名未含架构与档位，面板将在上传后按实际内容校验" };
+  if (p.arch !== a.arch) return { ok: false, text: `架构不符：所选包为 ${p.arch}，本机为 ${a.arch}，应下载 ${a.pattern}` };
+  if (a.arch !== "amd64") return { ok: true, text: `架构匹配（${a.arch}），该架构无 GOAMD64 档位之分` };
+  if (!p.level)
+    return { ok: null, text: `文件名未含档位标识（官方包有 go1XX / compatible 等变体），面板会读取包内二进制的编译参数核对${upgrade ? `，须与当前 ${a.cur_level || "?"} 一致` : `，不得超过本机上限 ${a.cpu_level || "?"}`}；建议直接下载 ${a.pattern}` };
+  if (upgrade) {
+    if (a.cur_level && p.level !== a.cur_level)
+      return { ok: false, text: `档位不符：所选包为 ${p.level}，当前安装为 ${a.cur_level}，升级须同档位，应下载 ${a.pattern}` };
+    return { ok: true, text: `档位与当前安装一致（${a.cur_level || p.level}）` };
+  }
+  if (!a.cpu_level) return { ok: null, text: `已选 ${p.level} 包；本机档位无法判定，不确定时 v1 最稳` };
+  if (LEVEL_RANK[p.level] > LEVEL_RANK[a.cpu_level])
+    return { ok: false, text: `档位超出本机 CPU 支持：所选包为 ${p.level}，本机最高 ${a.cpu_level}，应下载 ${a.pattern}` };
+  if (LEVEL_RANK[p.level] < LEVEL_RANK[a.cpu_level])
+    return { ok: null, text: `可以运行但没跑满性能：本机 CPU 支持 ${a.cpu_level}，建议下载 ${a.pattern}` };
+  return { ok: true, text: `档位与本机 CPU 匹配（${a.cpu_level}）` };
+}
+
+function showPkgFit(el, name, a, upgrade) {
+  const r = pkgFit(name, a, upgrade);
+  el.style.display = r ? "block" : "none";
+  if (!r) return;
+  el.textContent = (r.ok === true ? "✅ " : r.ok === false ? "⛔ " : "ℹ️ ") + r.text;
+  el.style.color = r.ok === true ? "var(--ok, #34d399)" : r.ok === false ? "#fb7185" : "#fbbf24";
+}
+
 /* ---------- mihomo 安装检测（未安装阻断，不允许进入面板） ---------- */
 const blockModal = $("blockModal"), blockMsg = $("blockMsg"),
       btnRedetect = $("btnRedetect");
 
-function showBlock(level) {
-  $("blockLevelHint").textContent = level ? "（本机 CPU 推荐档位：" + level + "）" : "";
+function showBlock(d) {
+  blockAdvice = (d && d.advice) || null;
+  renderInstallAdvice(blockAdvice);
+  $("blockPkgHint").style.display = "none";
   blockMsg.style.display = "none";
   blockModal.style.display = "flex";
 }
@@ -1009,7 +1137,8 @@ btnRedetect.onclick = async () => {
 // ---------- 阻断弹窗内的上传安装（.deb / .gz） ----------
 const blockFile = $("blockFile"), blockFileName = $("blockFileName"),
       blockToken = $("blockToken"), btnBlockUpload = $("btnBlockUpload"),
-      blockUploadMsg = $("blockUploadMsg");
+      blockUploadMsg = $("blockUploadMsg"), blockPkgHint = $("blockPkgHint");
+let blockAdvice = null;
 
 function blockUploadReady() {
   btnBlockUpload.disabled = !(blockFile.files[0] && blockToken.value.trim());
@@ -1018,6 +1147,7 @@ blockFile.onchange = () => {
   const f = blockFile.files[0];
   blockFileName.textContent = f ? f.name + "（" + fmtSize(f.size) + "）" : "未选择文件";
   blockUploadMsg.style.display = "none";
+  showPkgFit(blockPkgHint, f ? f.name : "", blockAdvice, false);
   blockUploadReady();
 };
 blockToken.addEventListener("input", blockUploadReady);
@@ -1060,16 +1190,24 @@ btnBlockUpload.onclick = async () => {
 
 /* ---------- mihomo 升级（版本必须更高 + 同档位 + 同架构，后端校验） ---------- */
 const upgradeModal = $("upgradeModal"), upFile = $("upFile"), upFileName = $("upFileName"),
-      upToken = $("upToken"), btnUpgradeUpload = $("btnUpgradeUpload"), upgradeMsg = $("upgradeMsg");
+      upToken = $("upToken"), btnUpgradeUpload = $("btnUpgradeUpload"), upgradeMsg = $("upgradeMsg"),
+      upPkgHint = $("upPkgHint");
+let upAdviceData = null;
 
-$("btnUpgrade").onclick = () => {
+$("btnUpgrade").onclick = async () => {
   if (!authToken) { showLoginModal(); return; }
   upFile.value = "";
   upFileName.textContent = "未选择文件";
   upToken.value = "";
   upgradeMsg.style.display = "none";
+  upPkgHint.style.display = "none";
   btnUpgradeUpload.disabled = true;
+  upAdviceData = null;
   upgradeModal.style.display = "flex";
+  try {
+    upAdviceData = (await detectMihomo()).advice || null;
+  } catch (e) { /* 取不到本机信息时保留「获取失败」提示 */ }
+  renderUpgradeAdvice(upAdviceData);
 };
 $("btnUpgradeCancel").onclick = () => { upgradeModal.style.display = "none"; };
 upgradeModal.onclick = e => { if (e.target === upgradeModal) upgradeModal.style.display = "none"; };
@@ -1081,6 +1219,7 @@ upFile.onchange = () => {
   const f = upFile.files[0];
   upFileName.textContent = f ? f.name + "（" + fmtSize(f.size) + "）" : "未选择文件";
   upgradeMsg.style.display = "none";
+  showPkgFit(upPkgHint, f ? f.name : "", upAdviceData, true);
   upgradeReady();
 };
 upToken.addEventListener("input", upgradeReady);
@@ -1232,7 +1371,7 @@ async function afterAuth() {
     d = { installed: true };  // 检测接口异常时不卡死登录
   }
   if (!d.installed) {
-    showBlock(d.level);
+    showBlock(d);
     return;
   }
   if (!authToken) {

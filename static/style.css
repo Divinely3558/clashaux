@@ -243,6 +243,22 @@ main {
   -webkit-background-clip: text; background-clip: text;
   color: transparent;
 }
+.ver-chip {
+  align-self: flex-end;
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 4px 11px;
+  font: 11px/1 var(--mono); letter-spacing: .5px;
+  color: var(--text-2);
+  white-space: nowrap;
+  background: var(--accent-soft);
+  border: 1px solid rgba(34, 211, 238, .2);
+  border-radius: 999px;
+}
+.ver-chip::before {
+  content: ""; width: 5px; height: 5px; border-radius: 50%;
+  background: var(--grad-aurora);
+  box-shadow: 0 0 8px var(--accent-glow);
+}
 
 /* ---------- 卡片 ---------- */
 .card {
@@ -803,6 +819,7 @@ pre::-webkit-scrollbar-track, .out::-webkit-scrollbar-track,
   main { padding: 12px 10px 32px; }
   .workspace-heading h2 { font-size: 19px; }
   .workspace-heading p { font-size: 12px; }
+  .ver-chip { padding: 3px 8px; font-size: 10px; gap: 5px; }
   .card { padding: 14px 12px; }
   .card h2 { font-size: 14px; }
   .tile { padding: 10px; }
