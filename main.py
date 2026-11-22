@@ -392,6 +392,42 @@ async def api_dashboard_install():
     return await asyncio.to_thread(mihomo.redeploy_dashboard)
 
 
+@app.get("/api/dashboard/info")
+async def api_dashboard_info():
+    """面板版本与本机适配建议（升级面板弹窗用）。"""
+    return await asyncio.to_thread(mihomo.dashboard_info)
+
+
+@app.post("/api/dashboard/upgrade")
+async def api_dashboard_upgrade(file: UploadFile, token: str = Form("")):
+    """上传官方 compressed-dist.tgz 升级 metacubexd 面板。
+
+    仅接受面板网页面板资源包：包内需含 index.html，版本必须高于当前面板版本
+    （读取包内 appVersion 比较），不满足则不落盘、不改动现有面板。
+    """
+    if not secrets.compare_digest(token.encode("utf-8"), TOKEN.encode("utf-8")):
+        return {"ok": False, "error": "token 错误"}
+    d = await asyncio.to_thread(mihomo.detect)
+    if not d["installed"]:
+        return {"ok": False, "error": "当前未安装 mihomo，无法升级面板"}
+    # 官方面板资源约 2.5MB，桌面客户端包 100MB+：过大的直接挡掉，不必读进内存
+    if (file.size or 0) > 30 * 1024 * 1024:
+        return {"ok": False, "error":
+                f"文件约 {(file.size or 0) / 1048576:.0f}MB，超出面板资源包体积；"
+                f"请下载官方 compressed-dist.tgz（约 2.5MB），deb/AppImage 等桌面客户端包不适用"}
+    data = await file.read()
+    if not data:
+        return {"ok": False, "error": "上传文件为空"}
+    with tempfile.NamedTemporaryFile(suffix=".tgz", delete=False) as tf:
+        tf.write(data)
+        tmp = Path(tf.name)
+    try:
+        return await asyncio.to_thread(mihomo.install_dashboard_from_upload,
+                                       tmp, file.filename or "")
+    finally:
+        tmp.unlink(missing_ok=True)
+
+
 @app.get("/api/basic")
 async def api_basic_get():
     """基础连接设置（external-controller/external-ui/secret/mixed-port）。"""

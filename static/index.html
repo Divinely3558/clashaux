@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=26.11.21a">
-<link rel="alternate icon" type="image/png" href="/favicon.png?v=26.11.21a">
-<link rel="apple-touch-icon" href="/favicon.png?v=26.11.21a">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=26.11.22">
+<link rel="alternate icon" type="image/png" href="/favicon.png?v=26.11.22">
+<link rel="apple-touch-icon" href="/favicon.png?v=26.11.22">
 <title>clashaux</title>
-<link rel="stylesheet" href="/style.css?v=26.11.21a">
+<link rel="stylesheet" href="/style.css?v=26.11.22">
 </head>
 <body>
 <!-- 极光氛围层：4 条渐变光带 + HUD 网格 + 星点 + 扫描线（纯装饰，不参与交互） -->
@@ -76,7 +76,7 @@
       </div>
 
       <section class="card basic-settings" id="secBasic">
-        <h2 style="flex-wrap:wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/></svg>基础设置<button class="btn danger-solid" id="btnDashInstall" style="margin-left:auto;white-space:nowrap">重新释放面板</button></h2>
+        <h2 style="flex-wrap:wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/></svg>基础设置<button class="btn danger-solid" id="btnDashUpgrade" style="margin-left:auto;white-space:nowrap">升级面板</button></h2>
         <div class="hint">此处修改 mihomo 基础连接配置：external-controller 为外部控制接口，面板与内核通信及「打开面板」均依赖此地址；mixed-port 为混合代理端口；external-ui 为 metacubexd 面板目录；secret 为控制接口访问密钥（留空不加密）。保存并应用后自动重载内核生效。</div>
         <div class="kv" style="grid-template-columns:auto 1fr;align-items:center">
           <dt>external-controller</dt><dd><input type="text" class="input" id="bcCtrl" style="width:100%" placeholder="0.0.0.0:9090"></dd>
@@ -260,6 +260,31 @@
       <button class="btn" id="btnUpgradeCancel">取消</button>
     </div>
     <div id="upgradeMsg" style="font-size:13px;margin-top:8px;display:none"></div>
+  </div>
+</div>
+
+<!-- metacubexd 面板升级弹窗（仅官方 compressed-dist.tgz，版本读包内 appVersion 比较） -->
+<div id="dashUpgradeModal" class="modal" style="display:none">
+  <div class="modal-content" style="max-width:600px;max-height:92vh;overflow:auto">
+    <h3 style="display:flex;align-items:center;gap:10px">升级 metacubexd 面板<button class="btn" id="btnDashInstall" style="margin-left:auto;white-space:nowrap">重新释放面板</button></h3>
+    <p>上传官方面板包 <code>compressed-dist.tgz</code>（约 2.5 MB）。面板安装前会校验：<b>包内必须含 index.html</b>、<b>新版版本号必须高于当前面板版本</b>（读包内 appVersion），任一不符都会拒绝安装。官方同页的 deb / rpm / AppImage / exe / dmg 是桌面客户端安装包，不是网页面板资源，本面板不接受。</p>
+    <div style="background:rgba(34,211,238,.07);border:1px solid rgba(34,211,238,.25);border-radius:10px;padding:12px 14px;margin-bottom:12px">
+      <div style="font-size:13px;font-weight:600;color:#a5f3fc;margin-bottom:8px">🎯 本机适配建议</div>
+      <dl class="kv" id="dashAdvice" style="margin:0"><dt>当前面板版本</dt><dd>检测中…</dd></dl>
+      <div id="dashAdviceNote" style="font-size:12px;color:var(--muted);line-height:1.7;margin-top:6px"></div>
+    </div>
+    <div class="file-row" style="flex-wrap:wrap;gap:8px;margin-bottom:6px">
+      <label class="btn">选择面板包<input type="file" id="dashFile" accept=".tgz,.tar.gz" hidden></label>
+      <span class="file-name" id="dashFileName">未选择文件</span>
+      <a class="btn" href="https://github.com/MetaCubeX/metacubexd/releases/latest" target="_blank" rel="noopener" style="text-decoration:none">🔗 下载页</a>
+    </div>
+    <div class="file-name" id="dashPkgHint" style="display:none;margin-bottom:10px"></div>
+    <input type="password" id="dashToken" class="input" style="width:100%;margin-bottom:10px" placeholder="输入面板 Token 确认升级">
+    <div class="modal-actions" style="margin-bottom:2px">
+      <button class="btn primary" id="btnDashUpgradeUpload" disabled>上传并升级</button>
+      <button class="btn" id="btnDashUpgradeCancel">取消</button>
+    </div>
+    <div id="dashUpgradeMsg" style="font-size:13px;margin-top:8px;display:none"></div>
   </div>
 </div>
 
@@ -1278,6 +1303,118 @@ btnDashInstall.onclick = async () => {
     toast(e.message, false);
   }
   btnDashInstall.disabled = false;
+};
+
+/* ---------- metacubexd 面板升级（仅官方 compressed-dist.tgz，版本必须更高） ---------- */
+const dashUpgradeModal = $("dashUpgradeModal"), dashFile = $("dashFile"),
+      dashFileName = $("dashFileName"), dashToken = $("dashToken"),
+      btnDashUpgradeUpload = $("btnDashUpgradeUpload"), dashUpgradeMsg = $("dashUpgradeMsg"),
+      dashPkgHint = $("dashPkgHint");
+
+// 官方同页的桌面客户端包体积 100MB+，与网页面板资源不是一回事，选包时先挡掉
+const DESKTOP_PKG_RE = /\.(deb|rpm|appimage|exe|dmg|pacman|zip|msi|pkg\.tar\.zst)$/i;
+
+function renderDashAdvice(a) {
+  const box = $("dashAdvice"), note = $("dashAdviceNote");
+  if (!a || !a.ok) {
+    box.innerHTML = adviceRows([["当前面板版本", "获取失败"]]);
+    note.textContent = "无法读取面板版本，仍会按包内 appVersion 校验，读不出版本时拒绝升级。";
+    return;
+  }
+  box.innerHTML = adviceRows([
+    ["当前面板版本", a.version ? "v" + a.version : "未释放"],
+    ["应选升级包", a.pattern],
+  ]);
+  note.textContent = `升级只替换 ${a.dir} 下的静态资源，不动内核与配置，也无需重载内核。`
+    + (a.deployed ? "" : "当前尚未释放面板，可先点「重新释放面板」。");
+}
+
+function dashPkgFit(name) {
+  if (DESKTOP_PKG_RE.test(name))
+    return { ok: false, text: "这是桌面客户端安装包，不是网页面板资源；请在同一发行版下下载 compressed-dist.tgz" };
+  if (!/\.(tgz|tar\.gz)$/i.test(name))
+    return { ok: false, text: "仅支持官方 compressed-dist.tgz（.tgz / .tar.gz）" };
+  return { ok: null, text: "格式符合；上传后按包内 index.html 与 appVersion 校验，新版本必须高于当前面板" };
+}
+
+function showDashFit(name) {
+  const r = name ? dashPkgFit(name) : null;
+  dashPkgHint.style.display = r ? "block" : "none";
+  if (!r) return;
+  dashPkgHint.textContent = (r.ok === true ? "✅ " : r.ok === false ? "⛔ " : "ℹ️ ") + r.text;
+  dashPkgHint.style.color = r.ok === true ? "var(--ok, #34d399)" : r.ok === false ? "#fb7185" : "#fbbf24";
+}
+
+$("btnDashUpgrade").onclick = async () => {
+  if (!authToken) { showLoginModal(); return; }
+  dashFile.value = "";
+  dashFileName.textContent = "未选择文件";
+  dashToken.value = "";
+  dashUpgradeMsg.style.display = "none";
+  dashPkgHint.style.display = "none";
+  btnDashUpgradeUpload.disabled = true;
+  dashUpgradeModal.style.display = "flex";
+  $("dashAdvice").innerHTML = adviceRows([["当前面板版本", "检测中…"]]);
+  $("dashAdviceNote").textContent = "";
+  try {
+    renderDashAdvice(await api("/api/dashboard/info"));
+  } catch (e) {
+    renderDashAdvice(null);
+  }
+};
+$("btnDashUpgradeCancel").onclick = () => { dashUpgradeModal.style.display = "none"; };
+dashUpgradeModal.onclick = e => { if (e.target === dashUpgradeModal) dashUpgradeModal.style.display = "none"; };
+
+function dashUpgradeReady() {
+  btnDashUpgradeUpload.disabled = !(dashFile.files[0] && dashToken.value.trim());
+}
+dashFile.onchange = () => {
+  const f = dashFile.files[0];
+  dashFileName.textContent = f ? f.name + "（" + fmtSize(f.size) + "）" : "未选择文件";
+  dashUpgradeMsg.style.display = "none";
+  showDashFit(f ? f.name : "");
+  dashUpgradeReady();
+};
+dashToken.addEventListener("input", dashUpgradeReady);
+dashToken.addEventListener("keydown", e => {
+  if (e.key === "Enter" && !btnDashUpgradeUpload.disabled) btnDashUpgradeUpload.click();
+});
+
+function showDashUpgradeMsg(text, ok) {
+  dashUpgradeMsg.textContent = text;
+  dashUpgradeMsg.style.color = ok ? "var(--ok, #34d399)" : "#fb7185";
+  dashUpgradeMsg.style.display = "block";
+}
+
+btnDashUpgradeUpload.onclick = async () => {
+  const f = dashFile.files[0];
+  if (!f) return;
+  btnDashUpgradeUpload.disabled = true;
+  btnDashUpgradeUpload.textContent = "升级中…";
+  dashUpgradeMsg.style.display = "none";
+  try {
+    const fd = new FormData();
+    fd.append("file", f);
+    fd.append("token", dashToken.value.trim());
+    // /api/dashboard/upgrade 不在 auth 白名单，必须带 Authorization（Form token 为二次确认）
+    const r = await fetch("/api/dashboard/upgrade", {
+      method: "POST",
+      headers: { "Authorization": "Bearer " + authToken },
+      body: fd,
+    });
+    const d = await r.json();
+    if (d.ok) {
+      showDashUpgradeMsg("✅ " + (d.message || "面板已升级") + "，刷新面板页面即可生效", true);
+      toast("metacubexd 面板已升级到 v" + (d.version || ""));
+      setTimeout(() => { dashUpgradeModal.style.display = "none"; }, 1800);
+    } else {
+      showDashUpgradeMsg("❌ " + (d.error || "升级失败"), false);
+    }
+  } catch (e) {
+    showDashUpgradeMsg("❌ " + e.message, false);
+  }
+  btnDashUpgradeUpload.textContent = "上传并升级";
+  dashUpgradeReady();
 };
 
 /* ---------- base.yaml 编辑 ---------- */

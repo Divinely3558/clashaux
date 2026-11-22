@@ -160,6 +160,122 @@ def redeploy_dashboard() -> dict:
             "dir": r.get("dir", "")}
 
 
+# ---------- 面板升级（仅官方 compressed-dist.tgz，版本取自包内 appVersion） ----------
+PANEL_PKG_NAME = "compressed-dist.tgz"
+_PANEL_APP_VER_RE = re.compile(r'appVersion\s*:\s*"([0-9]+(?:\.[0-9]+)*)"')
+
+
+def _html_app_version(text: str) -> str:
+    """从面板 index.html 的 __NUXT__.config.public 中读取 appVersion。"""
+    m = _PANEL_APP_VER_RE.search(text)
+    return m.group(1) if m else ""
+
+
+def _index_app_version(path: Path) -> str:
+    try:
+        return _html_app_version(path.read_text(encoding="utf-8", errors="ignore"))
+    except OSError:
+        return ""
+
+
+def _tgz_app_version(tgz: Path) -> str:
+    """读取面板包内 index.html 记录的 appVersion（读不出返回空串）。"""
+    try:
+        with tarfile.open(tgz, "r:gz") as tf:
+            for m in tf.getmembers():
+                if not m.isfile() or m.name.rsplit("/", 1)[-1] != "index.html":
+                    continue
+                f = tf.extractfile(m)
+                if f:
+                    return _html_app_version(f.read(300_000).decode("utf-8", "ignore"))
+    except (tarfile.TarError, OSError, EOFError):
+        return ""
+    return ""
+
+
+def dashboard_version() -> str:
+    """当前已释放面板的版本（未释放或读不出返回空串）。"""
+    return _index_app_version(dashboard_dir() / "index.html")
+
+
+def dashboard_info() -> dict:
+    """面板版本与本机适配建议（升级面板弹窗用）。
+
+    面板是纯静态前端，与 CPU 架构、GOAMD64 档位无关；未释放面板时以
+    内置包的版本作为当前版本。
+    """
+    dest = dashboard_dir()
+    embedded = _tgz_app_version(EMBEDDED_DASH_TGZ) if EMBEDDED_DASH_TGZ.exists() else ""
+    installed_ver = dashboard_version()
+    return {
+        "ok": True,
+        "version": installed_ver or embedded,
+        "deployed": (dest / "index.html").is_file(),
+        "dir": str(dest),
+        "embedded_version": embedded,
+        "arch": host_arch(),
+        "pattern": PANEL_PKG_NAME,
+    }
+
+
+def install_dashboard_from_upload(path: Path, orig_name: str = "") -> dict:
+    """用上传的官方 compressed-dist.tgz 升级网页面板。
+
+    先解压到 mihomo 数据目录下的临时目录校验（必须是含 index.html 的面板资源、
+    版本必须高于当前面板版本），通过后再原子替换 metacubexd/，替换失败自动还原。
+    """
+    name = (orig_name or path.name).lower()
+    if not (name.endswith(".tgz") or name.endswith(".tar.gz")):
+        return {"ok": False,
+                "error": f"仅支持官方 {PANEL_PKG_NAME}（.tgz）；deb / rpm / AppImage / "
+                         f"exe / dmg 是桌面客户端安装包，不是网页面板资源"}
+    dest = dashboard_dir()
+    try:
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        staging = Path(tempfile.mkdtemp(dir=dest.parent, prefix=".metacubexd-new-"))
+    except OSError as e:
+        return {"ok": False, "error": f"无法在 {dest.parent} 创建临时目录: {e}"}
+    old: Path | None = None
+    try:
+        try:
+            with tarfile.open(path, "r:gz") as tf:
+                tf.extractall(staging, filter="data")
+        except (tarfile.TarError, OSError, EOFError) as e:
+            return {"ok": False, "error": f"解压失败，请确认上传的是官方 {PANEL_PKG_NAME}: {e}"}
+        if not (staging / "index.html").is_file():
+            return {"ok": False,
+                    "error": f"包内没有 index.html，不是网页面板资源，请下载官方 {PANEL_PKG_NAME}"}
+        new_ver = _index_app_version(staging / "index.html")
+        if not new_ver:
+            return {"ok": False,
+                    "error": "包内 index.html 未记录 appVersion，无法判断版本，已拒绝升级"}
+        cur_ver = dashboard_version()
+        if cur_ver and not version_newer(new_ver, cur_ver):
+            return {"ok": False,
+                    "error": f"新面板 v{new_ver} 不高于当前面板 v{cur_ver}，无需升级"}
+        try:
+            if dest.exists():
+                old = dest.with_name(f".metacubexd-old-{os.getpid()}")
+                if old.exists():
+                    shutil.rmtree(old, ignore_errors=True)
+                dest.rename(old)
+            staging.rename(dest)
+        except OSError as e:
+            if old is not None and old.exists() and not dest.exists():
+                try:
+                    old.rename(dest)
+                except OSError:
+                    pass
+            return {"ok": False, "error": f"替换面板目录失败: {e}"}
+        if old is not None:
+            shutil.rmtree(old, ignore_errors=True)
+        return {"ok": True, "message": f"面板已升级到 v{new_ver}",
+                "version": new_ver, "dir": str(dest)}
+    finally:
+        if staging.exists():
+            shutil.rmtree(staging, ignore_errors=True)
+
+
 def ensure_geo_files(force: bool = False) -> dict:
     """释放 geoip.dat / geosite.dat / country.mmdb 到 mihomo 数据目录（mihomo 从 -d 目录读取）。
 

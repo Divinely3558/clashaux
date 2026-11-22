@@ -1,6 +1,6 @@
 # clashaux
 
-**v26.11.21a**
+**v26.11.22**
 
 mihomo (Clash Meta) 辅助管理面板，提供 Web UI 来管理配置、订阅和服务。
 
@@ -14,7 +14,7 @@ mihomo (Clash Meta) 辅助管理面板，提供 Web UI 来管理配置、订阅�
 - **服务控制** — 启动/停止、设为自启/取消自启均为随服务状态自动切换的单按钮（未知状态禁用，可点「刷新状态」重新获取），支持重载配置
 - **base.yaml 编辑** — 在线编辑头部模板（基础连接设置已独立到「基础设置」卡片）；「保存」只更新模板待下次换头生效，「保存并应用」立即保留正文、只替换头部并重载 mihomo
 - **内置 geo 数据** — geoip.dat / geosite.dat / country.mmdb 打包进可执行文件，检测到 mihomo 后释放到其数据目录（`-d` 目录），mihomo 可直接加载 GeoIP/GeoSite 规则；可执行文件同目录 `assets/` 下放置同名文件可外部覆盖（单文件粒度，缺失回退内置），免重新打包即可更新 geo 数据
-- **内置面板** — metacubexd 打包进程序，检测到 mihomo 后自动释放到 **mihomo 数据目录**（systemd 单元 `-d` 参数，deb 安装默认为 `/etc/mihomo`）下的 `metacubexd/`，无需联网下载；「基础设置」卡的「重新释放面板」按钮可随时手动重新释放（面板文件丢失、损坏或被误删时恢复）；「打开面板」跳转时把当前 `secret` 写在 URL 片段里（`#/setup?hostname=&port=&secret=`），metacubexd 读后即连并替换为 `#/overview`，无需再输密码——片段不发给内核、不进浏览器历史，直接访问或收藏 `/ui/` 仍需手输密钥
+- **内置面板** — metacubexd 打包进程序，检测到 mihomo 后自动释放到 **mihomo 数据目录**（systemd 单元 `-d` 参数，deb 安装默认为 `/etc/mihomo`）下的 `metacubexd/`，无需联网下载；「基础设置」卡的「升级面板」按钮支持上传官方 `compressed-dist.tgz` 升级面板：弹窗显示当前面板版本（读 `index.html` 的 `appVersion`）与应选升级包，安装前校验包内含 `index.html` 且版本必须高于当前面板，先解压到临时目录校验通过再原子替换、失败自动还原，deb/rpm/AppImage/exe/dmg 等桌面客户端包与超大文件直接拒绝；升级弹窗标题栏的「重新释放面板」可随时恢复内置版本（面板文件丢失、损坏、误删或升级后回退时使用）；「打开面板」跳转时把当前 `secret` 写在 URL 片段里（`#/setup?hostname=&port=&secret=`），metacubexd 读后即连并替换为 `#/overview`，无需再输密码——片段不发给内核、不进浏览器历史，直接访问或收藏 `/ui/` 仍需手输密钥
 - **配置备份** — 自动保留最近 5 份配置备份，支持下载与上传；上传备份先经 mihomo -t 校验，重名自动追加序号，超出 5 份自动清理最旧；可直接回滚
 - **面板设置** — 点击左上角 Logo 弹出设置弹窗，验证当前 Token 后可修改端口与 Token；改 Token 即时生效，改端口保存后自动重启绑定新地址
 - **网站图标** — favicon.svg 优先、favicon.png 兜底，浏览器标签页/侧边栏显示面板图标；鉴权白名单放行图标文件
@@ -133,6 +133,21 @@ uv run pyinstaller --onefile \
 - PyYAML
 
 ## 更新日志
+
+### v26.11.22
+
+**新增**
+
+- 面板升级：「基础设置」卡新增「升级面板」按钮，上传官方 `compressed-dist.tgz` 即可升级 metacubexd 网页面板，无需重新打包或联网下载
+- 面板升级弹窗显示「本机适配建议」：当前面板版本（读已释放 `index.html` 的 `appVersion`）与应选升级包 `compressed-dist.tgz`；面板为纯静态前端，无架构与 GOAMD64 档位之分
+- 安装前校验：包内必须含 `index.html`、包内 `appVersion` 必须高于当前面板版本，任一不符拒绝；文件超过 30MB（桌面客户端包）或后缀为 deb/rpm/AppImage/exe/dmg 直接拒绝
+- 先解压到 mihomo 数据目录下的临时目录校验，通过后原子替换 `metacubexd/`，替换失败自动还原旧面板
+- 升级弹窗标题栏提供「重新释放面板」入口，面板异常或想退回内置版本时可一键恢复
+
+**变更**
+
+- 「重新释放面板」按钮从基础设置卡片移入升级面板弹窗标题栏，与「升级面板」按钮分工更清晰
+- 版本号统一为 `26.11.22`（`pyproject.toml`、`uv.lock` 与静态资源缓存参数 `?v=`）
 
 ### v26.11.21a
 
